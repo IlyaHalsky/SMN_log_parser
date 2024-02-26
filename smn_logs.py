@@ -1,3 +1,5 @@
+import os
+import platform
 import re
 from dataclasses import dataclass
 from itertools import groupby
@@ -65,22 +67,30 @@ class List:
         if minion.id not in self.minions:
             self.minions[minion.id] = minion
 
+WIN_LOG_PATH = 'C:\\Program Files (x86)\\Hearthstone\\Logs\\'
+MAC_LOG_PATH = '/Applications/Hearthstone/Logs/'
 
 if __name__ == '__main__':
-    minions = {}
-    log_file = 'C:\Program Files (x86)\Hearthstone\Logs\Hearthstone_2024_02_26_23_01_41\Zone.log'
-    with open(log_file) as file:
-        for line_n in file:
-            line = line_n[:-1]
-            type, message = extract_message(line)
-            if type == 'list-item':
-                parse_minion(message, minions)
-    current_list = -1
-    for list_id, minions_group in groupby(minions.values(), lambda minion: minion.list_id):
-        minions_list = list(minions_group)
-        minions_list.sort(key=lambda minion: minion.id)
-        if list_id != current_list:
-            print(f"T:{list_id} {len(minions_list)}")
-            current_list = list_id
-        for minion in minions_list:
-            print(minion)
+    base_path = WIN_LOG_PATH if platform.system() == 'Windows' else MAC_LOG_PATH
+    for log_folder in os.listdir(base_path):
+        log_path = os.path.join(base_path, log_folder, 'Zone.log')
+        minions = {}
+        with open(log_path) as file:
+            for line_n in file:
+                line = line_n[:-1]
+                type, message = extract_message(line)
+                if type == 'list-item':
+                    parse_minion(message, minions)
+        current_list = -1
+        with open(log_folder+'.txt', 'w') as result:
+            for list_id, minions_group in groupby(minions.values(), lambda minion: minion.list_id):
+                minions_list = list(minions_group)
+                minions_list.sort(key=lambda minion: minion.id)
+                if list_id != current_list:
+                    print(f"T:{list_id} {len(minions_list)}")
+                    result.write(f"T:{list_id} {len(minions_list)}\n")
+                    current_list = list_id
+                for minion in minions_list:
+                    print(minion)
+                    result.write(f"{minion}\n")
+
