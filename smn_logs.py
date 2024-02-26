@@ -57,6 +57,9 @@ class Minion:
         tpe = 'S' if self.spell else 'M'
         return f'{tpe}|{self.name}|{player}:{position}'
 
+    @property
+    def child_card(self):
+        return len(self.tags) == 1 and self.tags[0][0] == 'PARENT_CARD'
 
 @dataclass
 class List:
@@ -84,13 +87,15 @@ if __name__ == '__main__':
         current_list = -1
         with open(log_folder+'.txt', 'w') as result:
             for list_id, minions_group in groupby(minions.values(), lambda minion: minion.list_id):
-                minions_list = list(minions_group)
+                minions_list = [minion for minion in minions_group if not minion.child_card]
+                if len(minions_list) != 34:
+                    continue
                 minions_list.sort(key=lambda minion: minion.id)
                 if list_id != current_list:
                     print(f"T:{list_id} {len(minions_list)}")
                     result.write(f"T:{list_id} {len(minions_list)}\n")
                     current_list = list_id
                 for minion in minions_list:
-                    print(minion)
+                    print(minion, minion.tags)
                     result.write(f"{minion}\n")
 
