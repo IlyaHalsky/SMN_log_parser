@@ -1,17 +1,22 @@
 ## Say My Name log parser for Hearthstone
 
 # Before use:
-- Enable logs ([How To](https://github.com/HearthSim/Hearthstone-Deck-Tracker/wiki/Setting-up-the-log.config))
-- Enter Say My Name puzzle ([How To](https://docs.google.com/document/d/13LdaSziJMj0XjqXGdlMQIu1YyVA4qTMab1ODRsh5bqk/edit#heading=h.fzpuwdlu8y0t))
-- Press end turn several times
-- Exit Puzzle
-- Exit Hearthstone (Not sure if needed)
+1) Enable logs ([How To](https://github.com/HearthSim/Hearthstone-Deck-Tracker/wiki/Setting-up-the-log.config))
+2) Open Hearthstone (this will reset logs)
+3) Enter Say My Name puzzle ([How To](https://docs.google.com/document/d/13LdaSziJMj0XjqXGdlMQIu1YyVA4qTMab1ODRsh5bqk/edit#heading=h.fzpuwdlu8y0t))
+4) Press end turn several times (max. 45)
+5) Exit Puzzle
+6) Repeat 3-5 as many times as you want (if you are on Windows, on Mac logs will be truncated) 
+7) Exit Hearthstone
 
 # How to run:
-- Clone repo and run `smn_logs.py`, requires python 3.8+
+- Clone repo and run `list_compiler.py`, requires python 3.8+
 - Download latest release
 
-Program will output logs to local folder in format `{Original Log Folder Name}.txt`
+Program will output to local folder 3 files:
+- `board_set.txt` - minions seen on board
+- `correct_set.txt` - minions seen as a correct option
+- `incorrect_set.txt` - minions seen as an incorrect option
 
-You can enter these logs here:
-_Pending Link_
+You can enter these sets here:
+[Say My Name catalog](https://docs.google.com/spreadsheets/d/19usNxtQtgAw4SjtZjCAKak6sZyHHuh7_1CWjcZ9G3VU/edit#gid=0)
