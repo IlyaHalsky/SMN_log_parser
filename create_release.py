@@ -6,5 +6,5 @@ PyInstaller.__main__.run([
     '--clean',
     '--distpath','./release',
     '--specpath','./release',
-    '-n smn_1.0.exe'
+    '-n smn_1.1.exe'
 ])

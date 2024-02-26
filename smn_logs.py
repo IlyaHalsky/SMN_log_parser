@@ -22,21 +22,23 @@ def extract_message(log_line):
     return None, None
 
 
-def parse_minion(log, minions):
+def parse_minion(log, minions, list_offset):
     change_list_match = re.match(
         r'changeList: id=(\d+)', log
     )
+    list_id = int(change_list_match.group(1)) + list_offset
     match = re.search(r'\[id=(\d+) cardId=.*? name=(.*?)\]', log)
     if match:
-        id = int(match.group(1))
+        minion_id = int(match.group(1)) + list_offset
         name = match.group(2)
-        if id not in minions:
-            minions[id] = Minion(int(change_list_match.group(1)), id, name, [])
-        elif minions[id].name == '???':
-            minions[id].name = name
+        if minion_id not in minions:
+            minions[minion_id] = Minion(list_id, minion_id, name, [], [list_id])
+        elif minions[minion_id].name == '???':
+            minions[minion_id].name = name
         tags = re.search(r'\[type=TAG_CHANGE.*tag=(.*?) value=(.*?)\]', log)
         if tags:
-            minions[id].tags.append((tags.group(1),tags.group(2)))
+            minions[minion_id].tags.append((tags.group(1),tags.group(2)))
+            minions[minion_id].lists.append(list_id)
     return None
 
 
@@ -46,6 +48,7 @@ class Minion:
     id: int
     name: str
     tags: []
+    lists: []
     spell: bool = False
 
     def __post_init__(self):
@@ -59,7 +62,7 @@ class Minion:
 
     @property
     def child_card(self):
-        return len(self.tags) == 1 and self.tags[0][0] == 'PARENT_CARD'
+        return any(tag[0] == 'PARENT_CARD' for tag in self.tags)
 
 @dataclass
 class List:
@@ -76,26 +79,38 @@ MAC_LOG_PATH = '/Applications/Hearthstone/Logs/'
 if __name__ == '__main__':
     base_path = WIN_LOG_PATH if platform.system() == 'Windows' else MAC_LOG_PATH
     for log_folder in os.listdir(base_path):
+        list_num = 0
+        list_offset = 0
         log_path = os.path.join(base_path, log_folder, 'Zone.log')
         minions = {}
         with open(log_path) as file:
             for line_n in file:
                 line = line_n[:-1]
                 type, message = extract_message(line)
+                if type == 'list-start':
+                    if message >= list_num:
+                        list_num = message
+                    else:
+                        list_offset = list_offset + 100000
+                        list_num = message
                 if type == 'list-item':
-                    parse_minion(message, minions)
+                    parse_minion(message, minions, list_offset)
         current_list = -1
         with open(log_folder+'.txt', 'w') as result:
             for list_id, minions_group in groupby(minions.values(), lambda minion: minion.list_id):
-                minions_list = [minion for minion in minions_group if not minion.child_card]
-                if len(minions_list) != 34:
-                    continue
-                minions_list.sort(key=lambda minion: minion.id)
-                if list_id != current_list:
-                    print(f"T:{list_id} {len(minions_list)}")
-                    result.write(f"T:{list_id} {len(minions_list)}\n")
-                    current_list = list_id
-                for minion in minions_list:
-                    print(minion, minion.tags)
-                    result.write(f"{minion}\n")
+                minions_list_all = [minion for minion in list(minions_group)]
+                minions_list = [minion for minion in minions_list_all if not minion.child_card]
+                if len(minions_list) == 34:
+                    minions_list.sort(key=lambda minion: minion.id)
+                    if list_id != current_list:
+                        result.write(f"T:{list_id} {len(minions_list)}\n")
+                        current_list = list_id
+                    for minion in minions_list:
+                        result.write(f"{minion}\n")
+                else:
+                    if list_id != current_list:
+                        print(f"T:{list_id} {len(minions_list_all)}\n")
+                        current_list = list_id
+                    for minion in minions_list_all:
+                        print(minion.id, minion, minion.tags, minion.lists)
 
