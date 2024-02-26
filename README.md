@@ -11,7 +11,7 @@
 
 # How to run:
 - Clone repo and run `list_compiler.py`, requires python 3.8+
-- Download latest release from (here)[https://github.com/IlyaHalsky/SMN_log_parser/releases/tag/1.0]
+- Download latest release from [here](https://github.com/IlyaHalsky/SMN_log_parser/releases/tag/1.0)
 
 Program will output to local folder 3 files:
 - `board_set.txt` - minions seen on board
