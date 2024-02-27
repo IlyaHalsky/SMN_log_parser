@@ -1,6 +1,6 @@
 ## Say My Name log parser for Hearthstone
 
-# Repo contains Say My Name Helper and ~~Say My Name Data Collector~~
+# Repo contains Say My Name Helper
 
 # Before use:
 0) Preferably: Remove previous logs from log directory
@@ -15,7 +15,7 @@
 
 
 
-# ------------------------------------- OLDER STUFF ---------------------------------------------
+# ---------------- OLDER STUFF ----------------
 # ~~Say My Name Data Collector~~ _no longer needed_
 # Before use:
 0) Preferably: Remove previous logs from log directory
