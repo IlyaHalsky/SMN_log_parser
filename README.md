@@ -1,6 +1,7 @@
 ## Say My Name log parser for Hearthstone
 
 # Before use:
+0) Preferably: Remove previous logs from log directory
 1) Enable logs ([How To](https://github.com/HearthSim/Hearthstone-Deck-Tracker/wiki/Setting-up-the-log.config))
 2) Open Hearthstone (this will reset logs)
 3) Enter Say My Name puzzle ([How To](https://docs.google.com/document/d/13LdaSziJMj0XjqXGdlMQIu1YyVA4qTMab1ODRsh5bqk/edit#heading=h.fzpuwdlu8y0t))
@@ -10,8 +11,9 @@
 7) Exit Hearthstone
 
 # How to run:
-- Clone repo and run `list_compiler.py`, requires python 3.8+
-- Download latest release
+Download latest release from [here](https://github.com/IlyaHalsky/SMN_log_parser/releases/tag/1.0)
+
+or Clone repo and run `list_compiler.py`, requires python 3.8+
 
 Program will output to local folder 3 files:
 - `board_set.txt` - minions seen on board
