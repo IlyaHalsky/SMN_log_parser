@@ -1,10 +1,8 @@
 import os
 import platform
-import re
-from dataclasses import dataclass
 from itertools import groupby
 
-from smn_logs import WIN_LOG_PATH, MAC_LOG_PATH, extract_message, parse_minion
+from smn_logs import WIN_LOG_PATH, MAC_LOG_PATH, read_log_file
 
 if __name__ == '__main__':
     base_path = WIN_LOG_PATH if platform.system() == 'Windows' else MAC_LOG_PATH
@@ -12,24 +10,10 @@ if __name__ == '__main__':
     correct_set = set()
     incorrect_set = set()
     for log_folder in os.listdir(base_path):
-        list_num = 0
-        list_offset = 0
         log_path = os.path.join(base_path, log_folder, 'Zone.log')
-        minions = {}
-        with open(log_path) as file:
-            for line_n in file:
-                line = line_n[:-1]
-                type, message = extract_message(line)
-                if type == 'list-start':
-                    if message >= list_num:
-                        list_num = message
-                    else:
-                        list_offset = list_offset + 100000
-                        list_num = message
-                if type == 'list-item':
-                    parse_minion(message, minions, list_offset)
-        current_list = -1
+        minions = read_log_file(log_path)
 
+        current_list = -1
         for list_id, minions_group in groupby(minions.values(), lambda minion: minion.list_id):
             minions_list_all = [minion for minion in list(minions_group)]
             minions_list = [minion for minion in minions_list_all if not minion.child_card]
@@ -61,5 +45,3 @@ if __name__ == '__main__':
         to_print = sorted(incorrect_set)
         for minion in to_print:
             file.write(minion + "\n")
-
-
