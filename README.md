@@ -1,6 +1,7 @@
 ## Say My Name log parser for Hearthstone
 
 # Before use:
+0) Preferably: Remove previous logs from log directory
 1) Enable logs ([How To](https://github.com/HearthSim/Hearthstone-Deck-Tracker/wiki/Setting-up-the-log.config))
 2) Open Hearthstone (this will reset logs)
 3) Enter Say My Name puzzle ([How To](https://docs.google.com/document/d/13LdaSziJMj0XjqXGdlMQIu1YyVA4qTMab1ODRsh5bqk/edit#heading=h.fzpuwdlu8y0t))
