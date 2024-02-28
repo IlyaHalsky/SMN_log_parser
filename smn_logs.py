@@ -18,7 +18,7 @@ LIST_END = re.compile(r"ZoneChangeList.Finish\(\) - id=(\d*)")
 
 
 def extract_message(log_line):
-    if log_line is None:
+    if log_line is None or log_line == '':
         return None, None
     message = TIMESTAMP_RE.match(log_line).group(3)
     if message is None:
@@ -63,14 +63,20 @@ def parse_minion(log, minions, list_offset):
                 name=name,
                 tags=[],
                 lists=[list_id],
-                json=minions_by_id.get(card_id, {}),
             )
+            minions[minion_id].json = minions_by_id.get(card_id, {})
         elif minions[minion_id].name == '???':
             minions[minion_id].name = name
         tags = re.search(r'\[type=TAG_CHANGE.*tag=(.*?) value=(.*?)\]', log)
         if tags:
             minions[minion_id].tags.append((tags.group(1), tags.group(2)))
             minions[minion_id].lists.append(list_id)
+        hide = re.search(r'\[type=HIDE_ENTITY entity=\[id=', log)
+        if hide:
+            minions[minion_id].shown = False
+        show = re.search(r'\[type=SHOW_ENTITY entity=\[id=', log)
+        if show:
+            minions[minion_id].shown = True
     return None
 
 
@@ -82,11 +88,12 @@ class Minion:
     name: str
     tags: []
     lists: []
-    json: {}
     spell: bool = False
 
     def __post_init__(self):
         self.spell = self.name == '???'
+        self.json = {}
+        self.shown = True
 
     # def __repr__(self):
     #    player = 'O' if ('CONTROLLER', '2 ') in self.tags else 'P'
@@ -107,8 +114,24 @@ class Minion:
         return int(next((tag[1] for tag in self.tags if tag[0] == 'ZONE_POSITION'))) - 1
 
     @property
+    def position_safe(self):
+        return int(next((tag[1] for tag in self.tags if tag[0] == 'ZONE_POSITION'), 0)) - 1
+
+    @property
+    def used(self):
+        return any(map(lambda x: x == ("ZONE", "GRAVEYARD"), self.tags))
+
+    @property
+    def last_set_aside(self):
+        return len(self.tags) != 0 and self.tags[-1] == ("ZONE", "SETASIDE ")
+
+    @property
     def sort_key(self):
         return (self.player, self.position)
+
+    @property
+    def sort_key_safe(self):
+        return (self.player, self.position_safe, self.name)
 
     @property
     def expansion(self):

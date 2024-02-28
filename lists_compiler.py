@@ -11,6 +11,11 @@ if __name__ == '__main__':
     incorrect_set = set()
     for log_folder in os.listdir(base_path):
         log_path = os.path.join(base_path, log_folder, 'Zone.log')
+    #logs_path = "logs"
+    #for log_file in os.listdir(logs_path):
+    #    log_path = os.path.join(logs_path, log_file)
+    #    if os.path.isdir(log_path):
+    #        continue
         minions = read_log_file(log_path)
 
         current_list = -1
@@ -35,10 +40,6 @@ if __name__ == '__main__':
 
     with open('board_set.txt', 'w') as file:
         to_print = sorted(board_set)
-        for minion in to_print:
-            file.write(minion + "\n")
-    with open('correct_set.txt', 'w') as file:
-        to_print = sorted(correct_set)
         for minion in to_print:
             file.write(minion + "\n")
     with open('incorrect_set.txt', 'w') as file:

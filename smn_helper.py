@@ -1,5 +1,6 @@
 import platform
 import time
+from dataclasses import dataclass
 from itertools import groupby
 from operator import attrgetter as atr
 from typing import Iterator, List
@@ -13,8 +14,11 @@ from smn_logs import extract_message, parse_minion, Minion
 def hs_running():
     for pid in psutil.pids():
         if psutil.pid_exists(pid):
-            if 'Hearthstone.exe' in psutil.Process(pid).name():
-                return True
+            try:
+                if 'Hearthstone.exe' in psutil.Process(pid).name():
+                    return True
+            except:
+                pass
     return False
 
 
@@ -36,12 +40,33 @@ def follow(file, sleep_sec=0.1) -> Iterator[str]:
     yield ''
 
 
-def print_game(minions: List[Minion]):
-    header = '-' * 40
-    opponent_board = minions[:7]
-    opponent_string = list(map(lambda m: m.name, opponent_board))
-    player_board = minions[7:]
-    player_string = list(map(lambda m: m.name, player_board))
+@dataclass
+class GameInProgress:
+    minions: List[Minion]
+    spells: List[Minion]
+
+    def __post_init__(self):
+        pass
+
+    @property
+    def list_id(self):
+        return self.minions[0].list_id
+
+    @property
+    def opponents_board(self):
+        return list(filter(lambda x: x.shown, self.minions[:7]))
+
+    @property
+    def players_board(self):
+        return list(filter(lambda x: not x.last_set_aside, self.minions[7:]))
+
+    @property
+    def known_spells(self):
+        return list(filter(lambda spell: spell.name != '???', self.spells))
+
+def print_game(game: GameInProgress):
+    opponent_string = list(map(lambda m: m.name, game.opponents_board))
+    player_string = list(map(lambda m: m.name, game.players_board))
     return tabulate([opponent_string, player_string], headers=[f"Pos. {i}" for i in range(1, 8)])
 
 
@@ -82,10 +107,13 @@ def read_log_file(filename: str):
                 minions_list_all = [minion for minion in list(minions_group)]
                 minions_list = [minion for minion in minions_list_all if not minion.child_card]
                 only_minions_list = [minion for minion in minions_list if not minion.spell]
+                only_spells_list = [minion for minion in minions_list if minion.spell]
                 if len(only_minions_list) < 14:
                     continue
                 only_minions_list.sort(key=atr('sort_key'))
-                games.append(only_minions_list)
+                only_spells_list.sort(key=atr('sort_key_safe'))
+                game = GameInProgress(only_minions_list, only_spells_list)
+                games.append(game)
             except:
                 pass
         if len(games) > 0:
@@ -94,7 +122,7 @@ def read_log_file(filename: str):
                 clear()
                 print(print_last)
                 last_game_string = print_last
-                last_game_id = games[-1][0].list_id
+                last_game_id = games[-1].list_id
         minions = dict(filter(my_filtering_function, minions.items()))
     return minions
 
