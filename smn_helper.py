@@ -8,10 +8,11 @@ from typing import Iterator, List
 
 import cv2
 import psutil
+from playsound import playsound
 from tabulate import tabulate
 
 from smn_game import Game
-from smn_logs import extract_message, parse_minion, Minion, minions_by_id
+from smn_logs import extract_message, parse_minion, Minion, minions_by_id, resource_path
 from visualize import create_board_image
 
 
@@ -128,8 +129,10 @@ def read_log_file(filename: str):
             print(print_last)
             if not has_dups:
                 print("Keep on panning!")
+                #playsound(resource_path("rich.wav"))
             else:
                 print("Hoowee, I'm rich!")
+                playsound(resource_path("rich.wav"))
             #image = create_board_image(last_game, 255 if has_dups else 0)
             #image = cv2.resize(image, (0, 0), fx=0.7, fy=0.7)
             #cv2.imshow('board', image)
@@ -137,8 +140,11 @@ def read_log_file(filename: str):
         minions = dict(filter(my_filtering_function, minions.items()))
     return minions
 
-
-WIN_LOG_PATH = 'C:\\Program Files (x86)\\Hearthstone\\Logs\\'
+if os.path.exists("config.txt"):
+    with open('config.txt', 'r') as file:
+        WIN_LOG_PATH = file.read()
+else:
+    WIN_LOG_PATH = 'C:\\Program Files (x86)\\Hearthstone\\Logs\\'
 MAC_LOG_PATH = '/Applications/Hearthstone/Logs/'
 
 if __name__ == '__main__':

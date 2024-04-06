@@ -113,7 +113,7 @@ if __name__ == '__main__':
                     )
                 elif has_dups:
                     print(log_name, list_id)
-                    file = f"{images_path}/{duplicate_id}-{minions_by_id[duplicate_id]['name']}-{sanitized.replace(".log", "")}-{list_id}.jpg"
+                    file = f"{images_path}/{duplicate_id}-{minions_by_id[duplicate_id]['name']}-{sanitized.replace('.log', '')}-{list_id}.jpg"
                     if not os.path.exists(file):
                         board = create_board_image(game)
                         #board = cv2.resize(board, (0, 0), fx=0.5, fy=0.5)

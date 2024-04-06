@@ -11,5 +11,6 @@ PyInstaller.__main__.run([
     'smn_helper.py',
     '--onefile',
     '--add-data', "./cards.collectible.json:.",
+    '--add-data', "./rich.wav:.",
     '-n smn_helper.exe'
 ])
