@@ -2,3 +2,7 @@ pyinstaller
 hearthstone
 psutil
 tabulate
+numpy
+opencv-python
+tqdm
+igraph

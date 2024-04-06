@@ -1,6 +1,7 @@
 from hearthstone.enums import CardSet
 
 set_names = {
+    CardSet.INVALID: "INVALID",
     CardSet.BASIC: "Basic",
     CardSet.EXPERT1: "Classic",
     CardSet.HOF: "Hall of Fame",
@@ -51,5 +52,5 @@ set_names = {
     CardSet.WILD_WEST: "Showdown in the Badlands",
     CardSet.WHIZBANGS_WORKSHOP: "Whizbang's Workshop",
     CardSet.EVENT: "Event",
-CardSet.PLACEHOLDER_202204: "PLACEHOLDER_202204",
+    CardSet.PLACEHOLDER_202204: "PLACEHOLDER_202204",
 }
