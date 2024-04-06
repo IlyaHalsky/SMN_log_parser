@@ -1,3 +1,4 @@
+import logging
 import platform
 import time
 from collections import defaultdict
@@ -14,6 +15,10 @@ from tabulate import tabulate
 from smn_game import Game
 from smn_logs import extract_message, parse_minion, Minion, minions_by_id, resource_path
 from visualize import create_board_image
+
+logging.basicConfig(filename='smn_helper_gold.log', filemode='w', format='%(name)s - %(levelname)s - %(message)s')
+logger=logging.getLogger()
+logger.setLevel(logging.DEBUG)
 
 
 def hs_running():
@@ -50,9 +55,9 @@ def print_game(game: Game):
     opponent_string = list(map(lambda m: m.name, game.opponents_board))
     player_string = list(map(lambda m: m.name, game.players_board))
     #next_step = [game.next_step]
-    spells_string1 = list(map(lambda m: m.name, game.spells[0:8]))
-    spells_string2 = list(map(lambda m: m.name, game.spells[8:15]))
-    spells_string3 = list(map(lambda m: m.name, game.spells[15:]))
+    spells_string1 = list(map(lambda m: m.name, game.spells[0:7]))
+    spells_string2 = list(map(lambda m: m.name, game.spells[7:14]))
+    spells_string3 = list(map(lambda m: m.name, game.spells[14:]))
     return tabulate([opponent_string, player_string, ["Spells:"], spells_string1, spells_string2, spells_string3], headers=[f"Pos. {i}" for i in range(1, 8)])
 
 
@@ -76,6 +81,8 @@ def read_log_file(filename: str):
 
     last_game = None
     last_game_hash = ''
+    gold_so_far = []
+
     for line_n in follow(open(filename, 'r')):
         line = line_n[:-1]
         date, type, message = extract_message(line)
@@ -117,7 +124,8 @@ def read_log_file(filename: str):
             for key, value in grouped.items():
                 if len(value) > 1:
                     print(f"Duplicate, POG: {key} {minions_by_id[key]['name']}")
-                    print(f"Duplicate, POG: {key} {minions_by_id[key]['name']}")
+                    logger.info(f"Duplicate, POG: {key} {minions_by_id[key]['name']}")
+                    gold_so_far.append(minions_by_id[key]['name'])
                     for card in value:
                         card.color[1] = 255
                     for minion in last_game.minions:
@@ -129,9 +137,11 @@ def read_log_file(filename: str):
             print(print_last)
             if not has_dups:
                 print("Keep on panning!")
+                print(f"Gold so far: {','.join(gold_so_far)}")
                 #playsound(resource_path("rich.wav"))
             else:
                 print("Hoowee, I'm rich!")
+                print(f"Gold so far: {','.join(gold_so_far)}")
                 playsound(resource_path("rich.wav"))
             #image = create_board_image(last_game, 255 if has_dups else 0)
             #image = cv2.resize(image, (0, 0), fx=0.7, fy=0.7)
