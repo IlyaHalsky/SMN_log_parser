@@ -16,7 +16,7 @@ from smn_game import Game
 from smn_logs import extract_message, parse_minion, Minion, minions_by_id, resource_path
 from visualize import create_board_image
 
-logging.basicConfig(filename='smn_helper_gold.log', filemode='w', format='%(name)s - %(levelname)s - %(message)s')
+logging.basicConfig(filename='smn_helper_gold.log', filemode='a', format='%(name)s - %(levelname)s - %(message)s')
 logger=logging.getLogger()
 logger.setLevel(logging.DEBUG)
 
