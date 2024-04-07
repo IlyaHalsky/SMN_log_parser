@@ -133,7 +133,7 @@ def read_log_file(filename: str):
                             minion.color[1] = 255
                     has_dups = True
             print_last = print_game(last_game)
-
+            print(f"Game: {list_offset // 100000 + 1} Turn: {list_num - 2}")
             print(print_last)
             if not has_dups:
                 print("Keep on panning!")

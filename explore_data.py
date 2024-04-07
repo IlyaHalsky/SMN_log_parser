@@ -28,7 +28,7 @@ if __name__ == '__main__':
     duplicates = []
     #edges = defaultdict(int)
     for log_file in tqdm(os.listdir(logs_path)):
-        if sanitize_filename(log_file) in read_logs and 'Zone' not in log_file:
+        if sanitize_filename(log_file) in read_logs:
             continue
         else:
             read_logs.append(sanitize_filename(log_file))

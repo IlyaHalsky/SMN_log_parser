@@ -212,7 +212,7 @@ def read_log_file(filename: str):
     list_num = 0
     list_offset = 0
     minions = {}
-    with open(filename) as file:
+    with open(filename, encoding="utf8") as file:
         for line_n in file:
             line = line_n[:-1]
             date, type, message = extract_message(line)
