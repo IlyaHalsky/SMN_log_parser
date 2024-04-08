@@ -53,7 +53,10 @@ def print_game(game: Game):
 
 import os
 
-clear = lambda: os.system('cls')
+if platform.system() == 'Windows':
+    clear = lambda: os.system('cls')
+else:
+    clear = lambda: os.system('clear')
 
 
 def read_log_file(filename: str):
