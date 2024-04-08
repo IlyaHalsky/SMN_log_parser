@@ -20,7 +20,7 @@ def hs_running():
     for pid in psutil.pids():
         if psutil.pid_exists(pid):
             try:
-                if 'Hearthstone.exe' in psutil.Process(pid).name():
+                if 'Hearthstone' in psutil.Process(pid).name():
                     return True
             except:
                 pass
