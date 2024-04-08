@@ -7,8 +7,6 @@ from dataclasses import dataclass
 from itertools import groupby
 from typing import Optional
 
-import cv2
-import numpy as np
 import requests
 from hearthstone.enums import CardSet
 
@@ -120,7 +118,7 @@ class Minion:
         self.spell = self.name == '???'
         self.json = {}
         self.shown = True
-        self.color = [0,0,0]
+        self.color = [0, 0, 0]
 
     # def __repr__(self):
     #    player = 'O' if ('CONTROLLER', '2 ') in self.tags else 'P'
@@ -188,18 +186,18 @@ class Minion:
             set = minions_by_name[self.name]['set']
         return set_names[CardSet[set]]
 
-    @property
-    def en_image(self):
-        url = f"https://art.hearthstonejson.com/v1/render/latest/enUS/256x/{self.card_id}.png"
-        if not os.path.exists("./image_cache"):
-            os.makedirs(f"./image_cache")
-        if not os.path.exists(f"./image_cache/{self.card_id}.png"):
-            response = requests.get(url, stream=True)
-            with open(f"./image_cache/{self.card_id}.png", 'wb') as out_file:
-                shutil.copyfileobj(response.raw, out_file)
-            del response
-        image = cv2.imread(f"./image_cache/{self.card_id}.png", cv2.IMREAD_UNCHANGED)
-        return image
+    #@property
+    #def en_image(self):
+    #    url = f"https://art.hearthstonejson.com/v1/render/latest/enUS/256x/{self.card_id}.png"
+    #    if not os.path.exists("./image_cache"):
+    #        os.makedirs(f"./image_cache")
+    #    if not os.path.exists(f"./image_cache/{self.card_id}.png"):
+    #        response = requests.get(url, stream=True)
+    #        with open(f"./image_cache/{self.card_id}.png", 'wb') as out_file:
+    #            shutil.copyfileobj(response.raw, out_file)
+    #        del response
+    #    image = cv2.imread(f"./image_cache/{self.card_id}.png", cv2.IMREAD_UNCHANGED)
+    #    return image
 
     @property
     def mana(self):
@@ -212,7 +210,6 @@ class Minion:
     @property
     def health(self):
         return self.json['health']
-
 
 
 @dataclass

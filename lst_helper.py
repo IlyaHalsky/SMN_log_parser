@@ -1,23 +1,18 @@
 import logging
 import platform
 import time
-from collections import defaultdict
-from dataclasses import dataclass
 from itertools import groupby
 from operator import attrgetter as atr
-from typing import Iterator, List
+from typing import Iterator
 
-import cv2
 import psutil
-from playsound import playsound
 from tabulate import tabulate
 
 from smn_game import Game
-from smn_logs import extract_message, parse_minion, Minion, minions_by_id, resource_path
-from visualize import create_board_image
+from smn_logs import extract_message, parse_minion
 
 logging.basicConfig(filename='smn_helper_gold.log', filemode='a', format='%(name)s - %(levelname)s - %(message)s')
-logger=logging.getLogger()
+logger = logging.getLogger()
 logger.setLevel(logging.DEBUG)
 
 
@@ -50,7 +45,6 @@ def follow(file, sleep_sec=0.1) -> Iterator[str]:
     yield ''
 
 
-
 def print_game(game: Game):
     opponent_string = list(map(lambda m: m.attack_change, game.opponents_board))
     player_string = list(map(lambda m: m.attack_change, game.players_board))
@@ -77,11 +71,10 @@ def read_log_file(filename: str):
 
     last_game = None
     last_game_hash = ''
-    gold_so_far = []
 
     for line_n in follow(open(filename, 'r')):
         line = line_n[:-1]
-        #print(line)
+        # print(line)
         date, type, message = extract_message(line)
         if type == 'list-start':
             if message >= list_num:
@@ -102,7 +95,7 @@ def read_log_file(filename: str):
                     continue
                 only_minions_list.sort(key=atr('sort_key'))
                 current_game = Game(only_minions_list, [])
-                #print(current_game)
+                # print(current_game)
             except:
                 pass
         if current_game is not None and last_game_hash != current_game.hash_lst:
@@ -112,12 +105,9 @@ def read_log_file(filename: str):
             print_last = print_game(last_game)
             print(f"Game: {list_offset // 100000 + 1} Turn: {list_num - 2}")
             print(print_last)
-            #image = create_board_image(last_game, 255 if has_dups else 0)
-            #image = cv2.resize(image, (0, 0), fx=0.7, fy=0.7)
-            #cv2.imshow('board', image)
-            #cv2.waitKey(1)
         minions = dict(filter(my_filtering_function, minions.items()))
     return minions
+
 
 if os.path.exists("config.txt"):
     with open('config.txt', 'r') as file:
