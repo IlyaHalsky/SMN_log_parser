@@ -58,6 +58,10 @@ class Game:
         return sha256(all_ids_concat.encode()).hexdigest()
 
     @property
+    def lst_complete(self) -> bool:
+        return all([minion.current_attack is not None for minion in self.minions])
+
+    @property
     def left_out_current(self):
         lo = []
         self.minions.sort(key=atr('sort_key'))

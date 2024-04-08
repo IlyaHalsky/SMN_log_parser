@@ -1,3 +1,5 @@
+import platform
+
 import PyInstaller.__main__
 
 # PyInstaller.__main__.run([
@@ -14,10 +16,13 @@ import PyInstaller.__main__
 #     '--add-data', "./rich.wav:.",
 #     '-n smn_helper.exe'
 # ])
-
+if platform.system() == 'Windows':
+    filename = '-n lst_helper.exe'
+else:
+    filename = '-n lst_helper_mac'
 PyInstaller.__main__.run([
     'lst_helper.py',
     '--onefile',
     '--add-data', "./cards.collectible.json:.",
-    '-n lst_helper.exe'
+    filename
 ])

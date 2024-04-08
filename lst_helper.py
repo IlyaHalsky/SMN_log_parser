@@ -11,7 +11,7 @@ from tabulate import tabulate
 from smn_game import Game
 from smn_logs import extract_message, parse_minion
 
-logging.basicConfig(filename='smn_helper_gold.log', filemode='a', format='%(name)s - %(levelname)s - %(message)s')
+logging.basicConfig(filename='lst_helper.log', filemode='a', format='%(message)s')
 logger = logging.getLogger()
 logger.setLevel(logging.DEBUG)
 
@@ -45,10 +45,13 @@ def follow(file, sleep_sec=0.1) -> Iterator[str]:
     yield ''
 
 
-def print_game(game: Game):
-    opponent_string = list(map(lambda m: m.attack_change, game.opponents_board))
-    player_string = list(map(lambda m: m.attack_change, game.players_board))
-    return tabulate([opponent_string, player_string], headers=[f"Pos. {i}" for i in range(1, 8)])
+def print_game(game: Game, log_format: bool = False):
+    opponent_string = list(map(lambda m: str(m.attack_change), game.opponents_board))
+    player_string = list(map(lambda m: str(m.attack_change), game.players_board))
+    if log_format:
+        return f"{','.join(opponent_string)}\n{','.join(player_string)}"
+    else:
+        return tabulate([opponent_string, player_string], headers=[f"Pos. {i}" for i in range(1, 8)])
 
 
 import os
@@ -60,7 +63,7 @@ else:
 
 
 def read_log_file(filename: str):
-
+    logger.info(f"Logfile {filename}")
     list_num = 0
     list_offset = 0
     minions = {}
@@ -101,13 +104,15 @@ def read_log_file(filename: str):
                 # print(current_game)
             except:
                 pass
-        if current_game is not None and last_game_hash != current_game.hash_lst:
+        if current_game is not None and last_game_hash != current_game.hash_lst and current_game.lst_complete:
             clear()
             last_game = current_game
             last_game_hash = last_game.hash_lst
             print_last = print_game(last_game)
             print(f"Game: {list_offset // 100000 + 1} Turn: {list_num - 2}")
+            logger.info(f"Game: {list_offset // 100000 + 1} Turn: {list_num - 2}")
             print(print_last)
+            logger.info(print_game(last_game, log_format=True))
         minions = dict(filter(my_filtering_function, minions.items()))
     return minions
 
@@ -146,4 +151,4 @@ if __name__ == '__main__':
         print(f"Zone.log exists, starting reading")
         read_log_file(log_path)
     else:
-        read_log_file('logs/Zone.log')
+        read_log_file('Zone.log')
