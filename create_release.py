@@ -14,3 +14,10 @@ PyInstaller.__main__.run([
     '--add-data', "./rich.wav:.",
     '-n smn_helper.exe'
 ])
+
+PyInstaller.__main__.run([
+    'lst_helper.py',
+    '--onefile',
+    '--add-data', "./cards.collectible.json:.",
+    '-n lst_helper.exe'
+])

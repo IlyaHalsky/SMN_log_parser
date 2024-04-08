@@ -5,6 +5,7 @@ import shutil
 import sys
 from dataclasses import dataclass
 from itertools import groupby
+from typing import Optional
 
 import cv2
 import numpy as np
@@ -138,6 +139,22 @@ class Minion:
     @property
     def player(self):
         return 0 if ('CONTROLLER', '2 ') in self.tags else 1
+
+    @property
+    def current_attack(self) -> Optional[int]:
+        attack_tags = [int(tag[1][:-1]) for tag in self.tags if tag[0] == 'ATK' if tag[1][:-1].isdigit()]
+        if len(attack_tags) > 0:
+            return attack_tags[0]
+        else:
+            return None
+
+    @property
+    def attack_change(self):
+        current = self.current_attack
+        if current is None:
+            return 0
+        else:
+            return current - self.attack
 
     @property
     def position(self):

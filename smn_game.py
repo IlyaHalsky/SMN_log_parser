@@ -51,6 +51,13 @@ class Game:
         return sha256(all_ids_concat.encode()).hexdigest()
 
     @property
+    def hash_lst(self) -> str:
+        all_cards = [*self.minions, *self.spells]
+        all_ids = list(map(lambda minion: f"{minion.card_id}/{minion.attack_change}", all_cards))
+        all_ids_concat = ';'.join(all_ids)
+        return sha256(all_ids_concat.encode()).hexdigest()
+
+    @property
     def left_out_current(self):
         lo = []
         self.minions.sort(key=atr('sort_key'))
@@ -85,8 +92,8 @@ class Game:
         self.position = [' -1'] * len(self.spells)
         self.used = []
         self.left_out = []
-        self.minions.sort(key=atr('sort_key'))
-        self.spells.sort(key=atr('position'))
+        #self.minions.sort(key=atr('sort_key'))
+        #self.spells.sort(key=atr('position'))
         for i, spell in enumerate(self.spells):
             solved = False
             for j, minion in enumerate(self.minions):

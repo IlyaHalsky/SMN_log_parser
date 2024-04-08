@@ -112,7 +112,7 @@ if __name__ == '__main__':
                         images_path + "/" + 'ms-' + sanitized.replace(".log", "") + '-' + str(list_id) + ".jpg", board
                     )
                 elif has_dups:
-                    print(log_name, list_id)
+                    print(log_name, list_id, duplicate_id)
                     file = f"{images_path}/{duplicate_id}-{minions_by_id[duplicate_id]['name']}-{sanitized.replace('.log', '')}-{list_id}.jpg"
                     if not os.path.exists(file):
                         board = create_board_image(game)
