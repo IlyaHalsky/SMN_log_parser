@@ -73,11 +73,11 @@ def solution(opponent, player):
 def print_game(game: Game, log_format: bool):
     opponent_string = list(map(lambda m: str(m.attack_change), game.opponents_board))
     player_string = list(map(lambda m: str(m.attack_change), game.players_board))
-    opp_sum = sum(map(lambda m: m.attack_change, game.opponents_board))
-    player_sum = sum(map(lambda m: m.attack_change, game.players_board))
-    best_move, best_diff = solution(list(map(lambda m: m.attack_change, game.opponents_board)), list(map(lambda m: m.attack_change, game.players_board)))
-    [p_a, o_a, p_p, o_p, p_s, o_s] = best_move
-    move = ["Pos.",f"{p_p}->{o_p}", "Attack", f"{p_a}->{o_a}",  "Summs:" ,f"P: {p_s} O:{o_s}"]
+    #opp_sum = sum(map(lambda m: m.attack_change, game.opponents_board))
+    #player_sum = sum(map(lambda m: m.attack_change, game.players_board))
+    #best_move, best_diff = solution(list(map(lambda m: m.attack_change, game.opponents_board)), list(map(lambda m: m.attack_change, game.players_board)))
+    #[p_a, o_a, p_p, o_p, p_s, o_s] = best_move
+    #move = ["Pos.",f"{p_p}->{o_p}", "Attack", f"{p_a}->{o_a}",  "Summs:" ,f"P: {p_s} O:{o_s}"]
     if log_format:
         return f"{','.join(opponent_string)}\n{','.join(player_string)}"
     else:
@@ -85,10 +85,10 @@ def print_game(game: Game, log_format: bool):
             [
                 opponent_string,
                 player_string,
-                ["Player", player_sum, "Opponent", opp_sum],
-                ["Difference", player_sum - opp_sum],
-                move,
-                ["Best Difference", best_diff],
+                #["Player", player_sum, "Opponent", opp_sum],
+                #["Difference", player_sum - opp_sum],
+                #move,
+                #["Best Difference", best_diff],
             ], headers=[f"Pos. {i}" for i in range(1, 8)]
         )
 

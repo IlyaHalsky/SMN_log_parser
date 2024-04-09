@@ -7,6 +7,10 @@ if __name__ == '__main__':
     seen = set()
     numbers = defaultdict(int)
     cards = defaultdict(int)
+    has_dup = 0
+    total = 0
+    sets_all = set()
+    counts = defaultdict(lambda: defaultdict(int))
     with open('dump.txt', 'w') as w:
         with open('mysterious.csv',  encoding="utf8") as csvfile:
             for line in tqdm(csvfile.readlines()):
@@ -23,10 +27,23 @@ if __name__ == '__main__':
                     numbers[','.join(map(str, attack_add[0:7]))] += 1
                     numbers[','.join(map(str, attack_add[7:14]))] += 1
                     result = ''
+                    sets = defaultdict(int)
                     for k, v in parsed.items():
+                        counts[v['CardID']][v['AtkAdd']]+=1
+                        if v['ControllerSide'] == 2:
+                            sets[v['Set']] += 1
+
+                        sets_all.add(v['Set'])
                         cards[v['CardID']] += 1
                         result += ' ' + str(v['AtkAdd'])
-                    w.write(result + '\n')
+                    setss  = ''
+                    for k, v in sets.items():
+                        if v > 1:
+                            setss += f' {k}: {v} '
+                    if len(setss) > 0:
+                        has_dup += 1
+                    total += 1
+                    w.write(setss + result + '\n')
     for k, v in numbers.items():
         if v > 1:
             print(k, v)
@@ -34,4 +51,12 @@ if __name__ == '__main__':
     with open('cards.txt', 'w') as w:
         for k, v in cards.items():
             w.write(f"{k}, {v}\n")
+    print(has_dup, total)
+    print(len(sets_all))
+    counts = dict(sorted(counts.items(), key=lambda item: item[0]))
+    with open('counts.txt', 'w') as w:
+        for k, v in counts.items():
+            v = dict(sorted(v.items(), key=lambda item: item[0]))
+            w.write(f'{k}, {v}\n')
+
 
