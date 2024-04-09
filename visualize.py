@@ -72,3 +72,45 @@ def create_board_image(game: Game, bg=0):
     offset_w = 0
     offset_h += h_l
     return result
+
+def create_board_image_lst(game: Game, bg=0):
+    opponent_images = [minion.en_image for minion in game.opponents_board]
+    player_images = [minion.en_image for minion in game.players_board]
+    max_width = 0
+    total_height = 0
+    w_o, h_o = count_size(opponent_images)
+    max_width = max(max_width, w_o)
+    total_height += h_o
+    w_p, h_p = count_size(player_images)
+    max_width = max(max_width, w_p)
+    total_height += h_p
+    result = np.ones((total_height + 25, max_width, 4), dtype=np.uint8) * bg
+    offset_w = 0
+    offset_h = 0
+    opponent_offset = (max_width - w_o) // 6
+    for opponent, opp in zip(opponent_images, game.opponents_board):
+        h, w = opponent.shape[:2]
+        combine(opponent, opp, result, offset_h, offset_w)
+        text = str(opp.attack_change)
+        textsize = cv2.getTextSize(text, cv2.FONT_HERSHEY_SIMPLEX, 2, 5)[0]
+        result = cv2.putText(
+            result, text, (offset_w + w // 2 - textsize[0] // 2, offset_h + h), cv2.FONT_HERSHEY_SIMPLEX,
+            2, (255,255,255, 255), 5, cv2.LINE_AA
+        )
+        offset_w += w + opponent_offset
+    offset_w = 0
+    offset_h += h_o
+    player_offset = (max_width - w_p) // 6
+    for player, pl in zip(player_images, game.players_board):
+        h, w = player.shape[:2]
+        combine(player, pl, result, offset_h, offset_w)
+        text = str(pl.attack_change)
+        textsize = cv2.getTextSize(text, cv2.FONT_HERSHEY_SIMPLEX, 2, 5)[0]
+        result = cv2.putText(
+            result, text, (offset_w + w // 2 - textsize[0] // 2, offset_h + h), cv2.FONT_HERSHEY_SIMPLEX,
+            2, (255, 255, 255, 255), 5, cv2.LINE_AA
+        )
+        offset_w += w + player_offset
+    offset_w = 0
+    offset_h += h_p
+    return result

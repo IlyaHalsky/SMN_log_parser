@@ -5,11 +5,13 @@ from itertools import groupby
 from operator import attrgetter as atr
 from typing import Iterator
 
+import cv2
 import psutil
 from tabulate import tabulate
 
 from smn_game import Game
 from smn_logs import extract_message, parse_minion
+from visualize import create_board_image_lst
 
 logging.basicConfig(filename='lst_helper.log', filemode='a', format='%(message)s')
 logger = logging.getLogger()
@@ -39,6 +41,7 @@ def follow(file, sleep_sec=0.1) -> Iterator[str]:
                 yield line
                 line = ''
         elif hs_running():
+            #break
             time.sleep(sleep_sec)
         else:
             break
@@ -118,6 +121,9 @@ def read_log_file(filename: str):
     last_game_hash = ''
     # initial_map = {}
     # first_game = -1
+    if os.path.exists(f"lst_images"):
+        os.remove(f"lst_images")
+    os.mkdir(f"lst_images")
 
     for line_n in follow(open(filename, 'r')):
         line = line_n[:-1]
@@ -162,6 +168,10 @@ def read_log_file(filename: str):
             logger.info(f"Game: {list_offset // 100000 + 1} Turn: {list_num - 2}")
             print(print_last)
             logger.info(print_game(last_game, True))
+            image = create_board_image_lst(last_game)
+            cv2.imshow('board', image)
+            cv2.waitKey(1)
+            cv2.imwrite(f"lst_images/{list_offset // 100000 + 1}-{list_num - 2}.jpg", image)
         minions = dict(filter(my_filtering_function, minions.items()))
     return minions
 
