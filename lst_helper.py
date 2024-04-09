@@ -45,13 +45,52 @@ def follow(file, sleep_sec=0.1) -> Iterator[str]:
     yield ''
 
 
-def print_game(game: Game, log_format: bool = False):
+# def print_game(game: Game, log_format: bool, initial_map):
+#    #opponent_string = list(map(lambda m: str(m.attack_change), game.opponents_board))
+#    #player_string = list(map(lambda m: str(m.attack_change), game.players_board))
+#    opponent_string = list(map(lambda m: f"{initial_map[m.attack_change]}({m.attack_change})", game.opponents_board))
+#    player_string = list(map(lambda m: f"{initial_map[m.attack_change]}({m.attack_change})", game.players_board))
+#    if log_format:
+#        return f"{','.join(opponent_string)}\n{','.join(player_string)}"
+#    else:
+#        return tabulate([opponent_string, player_string], headers=[f"Pos. {i}" for i in range(1, 8)])
+
+def solution(opponent, player):
+    o_s = sum(opponent)
+    p_s = sum(player)
+    best_diff = abs(o_s - p_s)
+    best_move = [-1,-1, -1, -1, -1, -1]
+    for i, o in enumerate(opponent):
+        for j, p in enumerate(player):
+            o_n = o_s - o + p
+            p_n = p_s - p + o
+            diff = abs(o_n - p_n)
+            if diff <= best_diff:
+                best_move = [p, o, j + 1, i + 1, p_n, o_n]
+                best_diff = diff
+    return best_move, best_diff
+
+def print_game(game: Game, log_format: bool):
     opponent_string = list(map(lambda m: str(m.attack_change), game.opponents_board))
     player_string = list(map(lambda m: str(m.attack_change), game.players_board))
+    opp_sum = sum(map(lambda m: m.attack_change, game.opponents_board))
+    player_sum = sum(map(lambda m: m.attack_change, game.players_board))
+    best_move, best_diff = solution(list(map(lambda m: m.attack_change, game.opponents_board)), list(map(lambda m: m.attack_change, game.players_board)))
+    [p_a, o_a, p_p, o_p, p_s, o_s] = best_move
+    move = ["Pos.",f"{p_p}->{o_p}", "Attack", f"{p_a}->{o_a}",  "Summs:" ,f"P: {p_s} O:{o_s}"]
     if log_format:
         return f"{','.join(opponent_string)}\n{','.join(player_string)}"
     else:
-        return tabulate([opponent_string, player_string], headers=[f"Pos. {i}" for i in range(1, 8)])
+        return tabulate(
+            [
+                opponent_string,
+                player_string,
+                ["Player", player_sum, "Opponent", opp_sum],
+                ["Difference", player_sum - opp_sum],
+                move,
+                ["Best Difference", best_diff],
+            ], headers=[f"Pos. {i}" for i in range(1, 8)]
+        )
 
 
 import os
@@ -77,6 +116,8 @@ def read_log_file(filename: str):
 
     last_game = None
     last_game_hash = ''
+    # initial_map = {}
+    # first_game = -1
 
     for line_n in follow(open(filename, 'r')):
         line = line_n[:-1]
@@ -101,6 +142,14 @@ def read_log_file(filename: str):
                     continue
                 only_minions_list.sort(key=atr('sort_key'))
                 current_game = Game(only_minions_list, [])
+                # if list_offset > first_game and current_game.lst_complete:
+                #    first_game = list_offset
+                #    initial_map = {}
+                #    for i, opp in enumerate(current_game.opponents_board):
+                #        initial_map[opp.attack_change] = i + 1
+                #    for j, pl in enumerate(current_game.players_board):
+                #        initial_map[pl.attack_change] = j + 1 + 7
+
                 # print(current_game)
             except:
                 pass
@@ -108,11 +157,11 @@ def read_log_file(filename: str):
             clear()
             last_game = current_game
             last_game_hash = last_game.hash_lst
-            print_last = print_game(last_game)
+            print_last = print_game(last_game, False)
             print(f"Game: {list_offset // 100000 + 1} Turn: {list_num - 2}")
             logger.info(f"Game: {list_offset // 100000 + 1} Turn: {list_num - 2}")
             print(print_last)
-            logger.info(print_game(last_game, log_format=True))
+            logger.info(print_game(last_game, True))
         minions = dict(filter(my_filtering_function, minions.items()))
     return minions
 
