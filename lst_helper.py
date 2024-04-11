@@ -171,7 +171,12 @@ if os.path.exists("config.txt"):
         WIN_LOG_PATH = file.read()
 else:
     WIN_LOG_PATH = 'C:\\Program Files (x86)\\Hearthstone\\Logs\\'
-MAC_LOG_PATH = '/Applications/Hearthstone/Logs/'
+if os.path.exists("config.txt"):
+    with open('config.txt', 'r') as file:
+        MAC_LOG_PATH = file.read()
+else:
+    MAC_LOG_PATH = '/Applications/Hearthstone/Logs/'
+
 
 if __name__ == '__main__':
     debug = False
