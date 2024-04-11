@@ -1,5 +1,6 @@
 import logging
 import platform
+import shutil
 import time
 from itertools import groupby
 from operator import attrgetter as atr
@@ -74,13 +75,17 @@ def solution(opponent, player):
     return best_move, best_diff
 
 def print_game(game: Game, log_format: bool):
-    opponent_string = list(map(lambda m: str(m.attack_change), game.opponents_board))
-    player_string = list(map(lambda m: str(m.attack_change), game.players_board))
-    #opp_sum = sum(map(lambda m: m.attack_change, game.opponents_board))
-    #player_sum = sum(map(lambda m: m.attack_change, game.players_board))
-    #best_move, best_diff = solution(list(map(lambda m: m.attack_change, game.opponents_board)), list(map(lambda m: m.attack_change, game.players_board)))
-    #[p_a, o_a, p_p, o_p, p_s, o_s] = best_move
-    #move = ["Pos.",f"{p_p}->{o_p}", "Attack", f"{p_a}->{o_a}",  "Summs:" ,f"P: {p_s} O:{o_s}"]
+    opponent_string = list(map(lambda m: str(m.current_attack), game.opponents_board))
+    player_string = list(map(lambda m: str(m.current_attack), game.players_board))
+    opp_sum = sum(map(lambda m: m.current_attack, game.opponents_board))
+    player_sum = sum(map(lambda m: m.current_attack, game.players_board))
+    opp_sum1 = sum(map(lambda m: m.health, game.opponents_board))
+    player_sum1 = sum(map(lambda m: m.health, game.players_board))
+    opp_sum2 = sum(map(lambda m: m.mana, game.opponents_board))
+    player_sum2 = sum(map(lambda m: m.mana, game.players_board))
+    best_move, best_diff = solution(list(map(lambda m: m.current_attack, game.opponents_board)), list(map(lambda m: m.current_attack, game.players_board)))
+    [p_a, o_a, p_p, o_p, p_s, o_s] = best_move
+    move = ["Pos.",f"{p_p}->{o_p}", "Attack", f"{p_a}->{o_a}",  "Summs:" ,f"P: {p_s} O:{o_s}"]
     if log_format:
         return f"{','.join(opponent_string)}\n{','.join(player_string)}"
     else:
@@ -88,10 +93,10 @@ def print_game(game: Game, log_format: bool):
             [
                 opponent_string,
                 player_string,
-                #["Player", player_sum, "Opponent", opp_sum],
-                #["Difference", player_sum - opp_sum],
-                #move,
-                #["Best Difference", best_diff],
+                ["A", f"{player_sum}/{opp_sum}={player_sum-opp_sum}", "HP", f"{player_sum1}/{opp_sum1}={player_sum1-opp_sum1}", "M", f"{player_sum2}/{opp_sum2}={player_sum2-opp_sum2}"],
+                ["Difference", player_sum - opp_sum],
+                move,
+                ["Best Difference", best_diff],
             ], headers=[f"Pos. {i}" for i in range(1, 8)]
         )
 
@@ -122,7 +127,7 @@ def read_log_file(filename: str):
     # initial_map = {}
     # first_game = -1
     if os.path.exists(f"lst_images"):
-        os.remove(f"lst_images")
+        shutil.rmtree(f"lst_images")
     os.mkdir(f"lst_images")
 
     for line_n in follow(open(filename, 'r')):
@@ -169,8 +174,8 @@ def read_log_file(filename: str):
             print(print_last)
             logger.info(print_game(last_game, True))
             image = create_board_image_lst(last_game)
-            cv2.imshow('board', image)
-            cv2.waitKey(1)
+            #cv2.imshow('board', image)
+            #cv2.waitKey(1)
             cv2.imwrite(f"lst_images/{list_offset // 100000 + 1}-{list_num - 2}.jpg", image)
         minions = dict(filter(my_filtering_function, minions.items()))
     return minions
