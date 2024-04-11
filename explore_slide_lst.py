@@ -50,7 +50,6 @@ if __name__ == '__main__':
         pipe = pipes(prev_state, current_state)
         all_pipes.append(pipe)
         prev_state = swap(current_state)
-        break
 
 
 
