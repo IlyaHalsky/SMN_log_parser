@@ -75,18 +75,29 @@ def track_minion(minion_id: int, start: State, pipes: [Pipe]):
 
 
 if __name__ == '__main__':
-    log_file = "Zone.log"
+    log_file = "G:\\.shortcut-targets-by-id\\1CFpsGpqz65IlXdBeou1MB5lTdJbYxjv1\\Long Strange Trip runs\\Leftmost Attack Runs\\Halsky1.log"
     log_path = log_file
     minions = read_log_file(log_path)
     log_name = log_file.rsplit('.', 1)[0]
     current_list = -1
     games = []
+
+    carry_over = []
     for list_id, minions_group in groupby(minions.values(), lambda minion: minion.list_id):
         minions_list_all = [minion for minion in list(minions_group)]
         minions_list = [minion for minion in minions_list_all if not minion.child_card]
         only_minions_list = [minion for minion in minions_list if not minion.spell]
-        if len(minions_list) < 14:
-            continue
+        if len(only_minions_list) != 14:
+            if len(only_minions_list) > 0 and only_minions_list[-1].card_id == 'SCH_199':
+                carry_over = only_minions_list
+                continue
+            if len(carry_over) == 0:
+                continue
+            else:
+                only_minions_list = [*only_minions_list, *carry_over]
+                carry_over = []
+                if len(only_minions_list) != 14:
+                    continue
 
         only_minions_list.sort(key=atr('sort_key'))
         game = Game(only_minions_list, [])
@@ -97,11 +108,13 @@ if __name__ == '__main__':
     first_game, *tail = games
     first_state = State.from_game(first_game)
     prev_state = first_state.do_attack(1, 1)
+    #print(prev_state.attack_changes)
     all_pipes = []
     for current in tail:
         current_state = State.from_game(current)
         pipe = Pipe(prev_state, current_state)
         all_pipes.append(pipe)
+        print(','.join([str(i + 1) for i in pipe.pipe]))
         prev_state = current_state.do_attack(1, 1)
 
     #for i in range(14):

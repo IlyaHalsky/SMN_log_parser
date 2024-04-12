@@ -9,7 +9,6 @@ from typing import Iterator, List
 
 import cv2
 import psutil
-from playsound import playsound
 from tabulate import tabulate
 
 from smn_game import Game
@@ -116,33 +115,33 @@ def read_log_file(filename: str):
             last_game = current_game
             last_game_hash = last_game.hash
 
-            has_dups = False
-            group_by = lambda card: card.card_id
-            grouped = defaultdict(list)
-            for spell in last_game.spells:
-                grouped[group_by(spell)].append(spell)
-            for key, value in grouped.items():
-                if len(value) > 1:
-                    print(f"Duplicate, POG: {key} {minions_by_id[key]['name']}")
-                    logger.info(f"Duplicate, POG: {key} {minions_by_id[key]['name']}")
-                    gold_so_far.append(minions_by_id[key]['name'])
-                    for card in value:
-                        card.color[1] = 255
-                    for minion in last_game.minions:
-                        if group_by(minion) == key:
-                            minion.color[1] = 255
-                    has_dups = True
+            #has_dups = False
+            #group_by = lambda card: card.card_id
+            #grouped = defaultdict(list)
+            #for spell in last_game.spells:
+            #    grouped[group_by(spell)].append(spell)
+            #for key, value in grouped.items():
+            #    if len(value) > 1:
+            #        print(f"Duplicate, POG: {key} {minions_by_id[key]['name']}")
+            #        logger.info(f"Duplicate, POG: {key} {minions_by_id[key]['name']}")
+            #        gold_so_far.append(minions_by_id[key]['name'])
+            #        for card in value:
+            #            card.color[1] = 255
+            #        for minion in last_game.minions:
+            #            if group_by(minion) == key:
+            #                minion.color[1] = 255
+            #        has_dups = True
             print_last = print_game(last_game)
             print(f"Game: {list_offset // 100000 + 1} Turn: {list_num - 2}")
             print(print_last)
-            if not has_dups:
-                print("Keep on panning!")
-                print(f"Gold so far: {','.join(gold_so_far)}")
-                #playsound(resource_path("rich.wav"))
-            else:
-                print("Hoowee, I'm rich!")
-                print(f"Gold so far: {','.join(gold_so_far)}")
-                playsound(resource_path("rich.wav"))
+            #if not has_dups:
+            #    print("Keep on panning!")
+            #    print(f"Gold so far: {','.join(gold_so_far)}")
+            #    #playsound(resource_path("rich.wav"))
+            #else:
+            #    print("Hoowee, I'm rich!")
+            #    print(f"Gold so far: {','.join(gold_so_far)}")
+            #    playsound(resource_path("rich.wav"))
             #image = create_board_image(last_game, 255 if has_dups else 0)
             #image = cv2.resize(image, (0, 0), fx=0.7, fy=0.7)
             #cv2.imshow('board', image)

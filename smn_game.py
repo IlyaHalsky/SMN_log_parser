@@ -96,8 +96,8 @@ class Game:
         self.position = [' -1'] * len(self.spells)
         self.used = []
         self.left_out = []
-        #self.minions.sort(key=atr('sort_key'))
-        #self.spells.sort(key=atr('position'))
+        self.minions.sort(key=atr('sort_key'))
+        self.spells.sort(key=atr('position'))
         for i, spell in enumerate(self.spells):
             solved = False
             for j, minion in enumerate(self.minions):

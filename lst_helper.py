@@ -73,11 +73,18 @@ def solution(opponent, player):
 def print_game(game: Game, log_format: bool):
     opponent_string = list(map(lambda m: str(m.attack_change), game.opponents_board))
     player_string = list(map(lambda m: str(m.attack_change), game.players_board))
+    #possible_moves = []
+    #for o_a in [m.attack_change for m in game.opponents_board]:
+    #    for p_a in [m.attack_change for m in game.players_board]:
+    #        if (p_a, o_a) in moves_needed:
+    #            possible_moves.append((p_a, o_a))
+    #possible_moves.sort(key=lambda a: a[0])
     #opp_sum = sum(map(lambda m: m.attack_change, game.opponents_board))
     #player_sum = sum(map(lambda m: m.attack_change, game.players_board))
     #best_move, best_diff = solution(list(map(lambda m: m.attack_change, game.opponents_board)), list(map(lambda m: m.attack_change, game.players_board)))
     #[p_a, o_a, p_p, o_p, p_s, o_s] = best_move
     #move = ["Pos.",f"{p_p}->{o_p}", "Attack", f"{p_a}->{o_a}",  "Summs:" ,f"P: {p_s} O:{o_s}"]
+    #possible_moves_str = [str(a) for a in possible_moves]
     if log_format:
         return f"{','.join(opponent_string)}\n{','.join(player_string)}"
     else:
@@ -85,6 +92,7 @@ def print_game(game: Game, log_format: bool):
             [
                 opponent_string,
                 player_string,
+                #possible_moves_str
                 #["Player", player_sum, "Opponent", opp_sum],
                 #["Difference", player_sum - opp_sum],
                 #move,
@@ -109,7 +117,7 @@ def read_log_file(filename: str):
 
     def my_filtering_function(pair):
         key, value = pair
-        if last_game is not None and value.list_id < last_game.list_id:
+        if last_game is not None and value.list_id < last_game.list_id - 5:
             return False  # keep pair in the filtered dictionary
         else:
             return True  # filter pair out of the dictionary
@@ -133,13 +141,23 @@ def read_log_file(filename: str):
             parse_minion(date, filename, message, minions, list_offset)
 
         current_game = None
+        carry_over = []
         for list_id, minions_group in groupby(minions.values(), lambda minion: minion.list_id):
             try:
                 minions_list_all = [minion for minion in list(minions_group)]
                 minions_list = [minion for minion in minions_list_all if not minion.child_card]
                 only_minions_list = [minion for minion in minions_list if not minion.spell]
-                if len(only_minions_list) < 14:
-                    continue
+                if len(only_minions_list) != 14:
+                    if len(only_minions_list) > 0 and only_minions_list[-1].card_id == 'SCH_199':
+                        carry_over = only_minions_list
+                        continue
+                    if len(carry_over) == 0:
+                        continue
+                    else:
+                        only_minions_list = [*only_minions_list, *carry_over]
+                        carry_over = []
+                        if len(only_minions_list) != 14:
+                            continue
                 only_minions_list.sort(key=atr('sort_key'))
                 current_game = Game(only_minions_list, [])
                 # if list_offset > first_game and current_game.lst_complete:
