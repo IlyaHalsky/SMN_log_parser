@@ -19,7 +19,7 @@ import PyInstaller.__main__
 if platform.system() == 'Windows':
     filename = '-n lst_helper.exe'
 else:
-    filename = '-n lst_helper_mac'
+    filename = '-n lst_helper.mac'
 PyInstaller.__main__.run([
     'lst_helper.py',
     '--onefile',

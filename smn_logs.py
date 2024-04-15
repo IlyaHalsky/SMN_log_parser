@@ -211,6 +211,10 @@ class Minion:
     def health(self):
         return self.json['health']
 
+    @property
+    def rarity(self):
+        return self.json['rarity']
+
 
 @dataclass
 class List:
