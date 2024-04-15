@@ -1,5 +1,6 @@
 import logging
 import platform
+import re
 import time
 from itertools import groupby
 from operator import attrgetter as atr
@@ -70,9 +71,12 @@ def solution(opponent, player):
                 best_diff = diff
     return best_move, best_diff
 
-def print_game(game: Game, log_format: bool):
+def print_game(game: Game, first_board, log_format: bool):
     opponent_string = list(map(lambda m: str(m.attack_change), game.opponents_board))
     player_string = list(map(lambda m: str(m.attack_change), game.players_board))
+
+    o2 = list(map(str, first_board[:7]))
+    p2 = list(map(str, first_board[7:]))
     #possible_moves = []
     #for o_a in [m.attack_change for m in game.opponents_board]:
     #    for p_a in [m.attack_change for m in game.players_board]:
@@ -92,6 +96,9 @@ def print_game(game: Game, log_format: bool):
             [
                 opponent_string,
                 player_string,
+                ["First board:"],
+                o2,
+                p2
                 #possible_moves_str
                 #["Player", player_sum, "Opponent", opp_sum],
                 #["Difference", player_sum - opp_sum],
@@ -122,6 +129,7 @@ def read_log_file(filename: str):
         else:
             return True  # filter pair out of the dictionary
 
+    first_board = []
     last_game = None
     last_game_hash = ''
     # initial_map = {}
@@ -173,13 +181,23 @@ def read_log_file(filename: str):
                 pass
         if current_game is not None and last_game_hash != current_game.hash_lst and current_game.lst_complete:
             clear()
+            if len(first_board) == 0:
+                first_board = [m.attack_change for m in current_game.minions]
             last_game = current_game
             last_game_hash = last_game.hash_lst
-            print_last = print_game(last_game, False)
+            print_last = print_game(last_game, first_board, False)
             print(f"Game: {list_offset // 100000 + 1} Turn: {list_num - 2}")
             logger.info(f"Game: {list_offset // 100000 + 1} Turn: {list_num - 2}")
             print(print_last)
-            logger.info(print_game(last_game, True))
+            logger.info(print_game(last_game, first_board, True))
+            attack = input("Enter your attack: ").strip()
+            a, b = re.split(r'[^\d]+', attack)
+            one = first_board.index(int(a))
+            two = first_board.index(int(b))
+            swap = first_board[one]
+            first_board[one] = first_board[two]
+            first_board[two] = swap
+            print(print_last)
         minions = dict(filter(my_filtering_function, minions.items()))
     return minions
 
