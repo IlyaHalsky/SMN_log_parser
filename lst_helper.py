@@ -1,5 +1,6 @@
 import logging
 import platform
+import re
 import time
 from itertools import groupby
 from operator import attrgetter as atr
@@ -70,7 +71,7 @@ def solution(opponent, player):
                 best_diff = diff
     return best_move, best_diff
 
-def print_game(game: Game, log_format: bool):
+def print_game(game: Game, sums, future_sums, log_format: bool):
     opponent_string = list(map(lambda m: str(m.attack_change), game.opponents_board))
     player_string = list(map(lambda m: str(m.attack_change), game.players_board))
     #possible_moves = []
@@ -92,6 +93,9 @@ def print_game(game: Game, log_format: bool):
             [
                 opponent_string,
                 player_string,
+                ["Sums"],
+                sums,
+                future_sums,
                 #possible_moves_str
                 #["Player", player_sum, "Opponent", opp_sum],
                 #["Difference", player_sum - opp_sum],
@@ -127,6 +131,8 @@ def read_log_file(filename: str):
     # initial_map = {}
     # first_game = -1
 
+    sums = []
+
     for line_n in follow(open(filename, 'r')):
         line = line_n[:-1]
         # print(line)
@@ -139,6 +145,7 @@ def read_log_file(filename: str):
                 list_num = message
         if type == 'list-item':
             parse_minion(date, filename, message, minions, list_offset)
+
 
         current_game = None
         carry_over = []
@@ -173,13 +180,39 @@ def read_log_file(filename: str):
                 pass
         if current_game is not None and last_game_hash != current_game.hash_lst and current_game.lst_complete:
             clear()
+            if len(sums) == 0:
+                sums = [0] * 7
+            else:
+                for i, m in enumerate(last_game.opponents_board):
+                    sums[i] += m.attack_change
+            future_sums = sums.copy()
+            for i, m in enumerate(current_game.opponents_board):
+                future_sums[i] += m.attack_change
             last_game = current_game
             last_game_hash = last_game.hash_lst
-            print_last = print_game(last_game, False)
+            print_last = print_game(last_game, sums, future_sums, False)
             print(f"Game: {list_offset // 100000 + 1} Turn: {list_num - 2}")
             logger.info(f"Game: {list_offset // 100000 + 1} Turn: {list_num - 2}")
             print(print_last)
-            logger.info(print_game(last_game, True))
+            while True:
+                try:
+                    read = input("Enter number from your board and opponents:").strip()
+                    a, b = re.split(r'[^\d]+', read)
+                    board = [m.attack_change for m in last_game.minions]
+                    one = board.index(int(a))
+                    two = board.index(int(b))
+                    if one < 7:
+                        sums[one] += board[two]
+                        future_sums[one] += board[two]
+                    else:
+                        sums[two] += board[one]
+                        future_sums[two] += board[one]
+                    break
+                except:
+                    print("Wrong Input")
+                finally:
+                    print(print_last)
+            logger.info(print_game(last_game, sums, future_sums, True))
         minions = dict(filter(my_filtering_function, minions.items()))
     return minions
 
