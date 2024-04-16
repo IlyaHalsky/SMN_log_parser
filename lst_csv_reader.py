@@ -1,10 +1,10 @@
 import json
 from collections import defaultdict
 from dataclasses import dataclass
-from difflib import SequenceMatcher
-from itertools import groupby
 
 from tqdm import tqdm
+
+from test import lehmer_code
 
 
 # download from https://athena.hearthmod.com/apollo/mysterious
@@ -94,6 +94,7 @@ def attack_add_counts(boards):
             v = dict(sorted(v.items(), key=lambda item: item[0]))
             w.write(f'{k}, {v}\n')
 
+
 def attack_add_counts_position(boards):
     tpe = boards[0].game_type
     counts = defaultdict(lambda: defaultdict(list))
@@ -105,6 +106,26 @@ def attack_add_counts_position(boards):
         for k, v in counts.items():
             v = dict(sorted(v.items(), key=lambda item: item[0]))
             w.write(f'{k}, {v}\n')
+
+
+def lehmer_code_calc(boards):
+    final = []
+    for board in boards:
+        final.append((lehmer_code(board.attack_add), board.attack_add, board.minion_names))
+    final.sort(key=lambda item: item[0])
+    with open(f'csv_dump/lehmer.txt', 'w') as w:
+        for l, a, m in final:
+            w.write(f"{l}, {a}, {m}\n")
+    best = 100000000000
+    best2 = None
+    for i, other in tqdm(enumerate(final)):
+        for j in range(i + 1, len(final)):
+            aaa = final[j]
+            if aaa[0] - other[0] < best:
+                best2 = (other, aaa)
+                best = aaa[0] - other[0]
+    print(best)
+    print(best2)
 
 
 def rotate(l, n):
@@ -140,19 +161,33 @@ if __name__ == '__main__':
     attack_add_counts(reset)
     attack_add_counts_position(one_to_one)
     attack_add_counts_position(reset)
-    ## attack repeats
-    #seen_attack = defaultdict(list)
-    #for board in boards:
-    #   for i in range(14):
-    #       attack_add = rotate(board.attack_add, i)
-    #       attack = ','.join(map(str, attack_add))
-    #       seen_attack[attack].append(board)
-    #for key, value in seen_attack.items():
-    #   if len(value) > 1:
-    #       print(key)
-    #       for board in value:
-    #           print(board)
-    #           print(board.attack_add)
+    #lehmer_code_calc(boards)
+
+    # attack repeats with made attack
+    seen_attack = defaultdict(list)
+    for board in one_to_one:
+        attack_copy = board.attack_add.copy()
+        #attack_copy[0], attack_copy[7] = attack_copy[7], attack_copy[0]
+        attack_copy = [*attack_copy[:7], *list(reversed(attack_copy[7:]))]
+        for i in range(14):
+            attack_add = rotate(attack_copy, i)
+            attack = ','.join(map(str, attack_add))
+            seen_attack[attack].append(board)
+        for i in range(14):
+            attack_add = rotate(board.attack_add, i)
+            attack = ','.join(map(str, attack_add))
+            seen_attack[attack].append(board)
+    printed = set()
+    for key, value in seen_attack.items():
+        if len(value) > 1:
+            if ';'.join(map(str, map(lambda board: board.for_hashing, value))) in printed:
+                continue
+            else:
+                printed.add(';'.join(map(str, map(lambda board: board.for_hashing, value))))
+            print(key)
+            for board in value:
+                print(board)
+                print(board.attack_add)
     ## attack repeats
     # seen_attack = defaultdict(list)
     # for board in boards:
@@ -181,22 +216,22 @@ if __name__ == '__main__':
     # sizes = dict(sorted(sizes.items(), key=lambda item: item[0]))
     # print(sizes)
     ## cyclic minions boards
-    #seen_board = defaultdict(list)
-    #for board in boards:
+    # seen_board = defaultdict(list)
+    # for board in boards:
     #    for i in range(14):
     #        minions = rotate(board.minion_names, i)
     #        attack = ','.join(map(str, minions))
     #        seen_board[attack].append(board)
-    #for key, value in seen_board.items():
+    # for key, value in seen_board.items():
     #    if len(value) > 1:
     #        print(key)
     #        for board in value:
     #            print(board)
     #            print(board.minion_names)
     ## the longest repeating minion sequence
-    #repeating = defaultdict(lambda: defaultdict(int))
-    #s = SequenceMatcher()
-    #for i in tqdm(range(len(boards))):
+    # repeating = defaultdict(lambda: defaultdict(int))
+    # s = SequenceMatcher()
+    # for i in tqdm(range(len(boards))):
     #   board1 = boards[i]
     #   for j in range(i + 1, len(boards)):
     #       board2 = boards[j]
@@ -205,8 +240,8 @@ if __name__ == '__main__':
     #           a, b, size = s.find_longest_match()
     #           if size > 2:
     #               repeating[size][','.join(board1.minion_names[a: a + size])] += 1
-    #repeating = dict(sorted(repeating.items(), key=lambda item: item[0], reverse=True))
-    #for key, value in repeating.items():
+    # repeating = dict(sorted(repeating.items(), key=lambda item: item[0], reverse=True))
+    # for key, value in repeating.items():
     #   print(f'{key}: {value}')
     # the longest repeating number sequence
     # epeating = defaultdict(lambda: defaultdict(int))
@@ -223,9 +258,9 @@ if __name__ == '__main__':
     # epeating = dict(sorted(repeating.items(), key=lambda item: item[0], reverse=True))
     # or key, value in repeating.items():
     #   print(f'{key}: {value}')
-    #attack_values = []
-    #seen = set()
-    #for board in one_to_one:
+    # attack_values = []
+    # seen = set()
+    # for board in one_to_one:
     #    values = board.attack_add.copy()
     #    for i in range(7):
     #        a, b = values[i], values[i + 7]
@@ -236,7 +271,7 @@ if __name__ == '__main__':
     #        seen.add(str(values))
     #    else:
     #        print(values)
-    #for key, value in groupby(attack_values, lambda values: str(values)):
+    # for key, value in groupby(attack_values, lambda values: str(values)):
     #    aa = list(value)
     #    if len(aa) > 1:
     #        print(key, aa)

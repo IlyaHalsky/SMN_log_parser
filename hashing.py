@@ -62,11 +62,14 @@ unsolved_sets = {
 }
 
 
-def hash_combine(dbf_ids: [int]):
+def hash_combine(numbers):
+    total = 0
+    for number in numbers:
+        total += hash_not_combine(total, number)
+    return total
 
-
-def hash(total, dbf_id):
-    return dbf_id ^ (915 + 0x9e3779b9 + (total << 6) + (total >> 2))
+def hash_not_combine(total, dbf_id):
+    return total ^ (dbf_id + 0x9e3779b9 + (total << 6) + (total >> 2))
 
 
 result = 0 ^ (915 + 0x9e3779b9 + (0 << 6) + (0 >> 2))

@@ -3,3 +3,4 @@ hearthstone
 psutil
 tabulate
 numpy
+termcolor
