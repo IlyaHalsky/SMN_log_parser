@@ -113,19 +113,14 @@ def lehmer_code_calc(boards):
     for board in boards:
         final.append((lehmer_code(board.attack_add), board.attack_add, board.minion_names))
     final.sort(key=lambda item: item[0])
+    seen_codes = set()
     with open(f'csv_dump/lehmer.txt', 'w') as w:
         for l, a, m in final:
-            w.write(f"{l}, {a}, {m}\n")
-    best = 100000000000
-    best2 = None
-    for i, other in tqdm(enumerate(final)):
-        for j in range(i + 1, len(final)):
-            aaa = final[j]
-            if aaa[0] - other[0] < best:
-                best2 = (other, aaa)
-                best = aaa[0] - other[0]
-    print(best)
-    print(best2)
+            if l in seen_codes:
+                print("pooooog",l, a, m)
+            else:
+                seen_codes.add(l)
+            w.write(f"{l};{a};{m}\n")
 
 
 def rotate(l, n):
@@ -161,7 +156,7 @@ if __name__ == '__main__':
     attack_add_counts(reset)
     attack_add_counts_position(one_to_one)
     attack_add_counts_position(reset)
-    #lehmer_code_calc(boards)
+    lehmer_code_calc(boards)
 
     # attack repeats with made attack
     seen_attack = defaultdict(list)

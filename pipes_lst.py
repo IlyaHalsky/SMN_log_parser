@@ -161,6 +161,7 @@ if __name__ == '__main__':
             #for j, ball in enumerate(trip):
             #    print(j, ball)
             #    shutil.copy(f"image_cache/{ball.minion_id}.png", f"trip/{i}/{j}.png")
+
     for key, value in groupby(all_pipes, lambda pipe: pipe.pipe_key):
         pipes = list(value)
         if len(pipes) > 1:

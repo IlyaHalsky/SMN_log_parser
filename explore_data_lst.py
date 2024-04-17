@@ -1,13 +1,8 @@
-import os
 from collections import defaultdict
-from difflib import SequenceMatcher
-from itertools import groupby
-from operator import attrgetter as atr
 
-from tqdm import tqdm
-
-from smn_game import Game
-from smn_logs import read_log_file
+from lehmer_db import lehmer_db_csv
+from parse_lst import read_all_games
+from test import lehmer_code
 
 
 def sort_key(input):
@@ -97,13 +92,16 @@ def lcsubstring_length(a, b):
                 longest = max(longest, length)
     return longest
 
+
 def rotate(l, n):
     return l[n:] + l[:n]
+
 
 def game_to_board(game):
     if game is None:
         return None
     return [m.attack_change for m in game.minions]
+
 
 def compare_games(g1, g2):
     one = game_to_board(g1)
@@ -114,60 +112,27 @@ def compare_games(g1, g2):
             score += 1
     return score
 
+
+def lehmer_code_calc(games):
+    final = []
+    for game in games:
+        final.append((lehmer_code(game.attack_add), game.attack_add, game.minion_names))
+    final.sort(key=lambda item: item[0])
+    seen_codes = set()
+    with open(f'analysis/lehmer.txt', 'w') as w:
+        for l, a, m in final:
+            if l in seen_codes:
+                print("pooooog", l, a, m)
+            else:
+                seen_codes.add(l)
+            if lehmer_db_csv.seen(l) is not None:
+                print("pooooog", l, a, m)
+            w.write(f"{l};{a};{m}\n")
+
+
 if __name__ == '__main__':
-    logs_path = "G:\\.shortcut-targets-by-id\\1CFpsGpqz65IlXdBeou1MB5lTdJbYxjv1\\Long Strange Trip runs\\Leftmost Attack Runs"
-    # logs_path = "Leftmost Attack Runs"
-
-    for log_file in tqdm(os.listdir(logs_path)):
-        log_path = os.path.join(logs_path, log_file)
-        if os.path.isdir(log_path):
-            continue
-        minions = read_log_file(log_path)
-        log_name = log_file.rsplit('.', 1)[0]
-
-        games = []
-        carry_over = []
-        for list_id, minions_group in groupby(minions.values(), lambda minion: minion.list_id):
-            minions_list_all = [minion for minion in list(minions_group)]
-            minions_list = [minion for minion in minions_list_all if not minion.child_card]
-            only_minions_list = [minion for minion in minions_list if not minion.spell]
-            if len(only_minions_list) != 14:
-                if len(only_minions_list) > 0 and only_minions_list[-1].card_id == 'SCH_199':
-                    carry_over = only_minions_list
-                    continue
-                if len(carry_over) == 0:
-                    continue
-                else:
-                    only_minions_list = [*only_minions_list, *carry_over]
-                    carry_over = []
-                    if len(only_minions_list) != 14:
-                        continue
-
-            only_minions_list.sort(key=atr('sort_key'))
-            game = Game(only_minions_list, [])
-            if not game.lst_complete:
-                continue
-            games.append(game)
-
-        distribution = defaultdict(int)
-        for i, game1 in enumerate(games):
-            if i + 1 == len(games):
-                break
-            best_score = -1
-            best = None
-            best_index = None
-            for j, game2 in enumerate(games):
-                if i >= j:
-                    continue
-                if compare_games(game1, game2) > best_score:
-                    best_score = compare_games(game1, game2)
-                    best = game2
-                    best_index = j
-            print(best_score, i, best_index, best_index - i, game_to_board(game1), game_to_board(best))
-            distribution[best_score] += 1
-        print(sort_key(distribution))
-        break
-
-
-
-
+    runs = read_all_games(
+        "G:\\.shortcut-targets-by-id\\1CFpsGpqz65IlXdBeou1MB5lTdJbYxjv1\\Long Strange Trip runs\\Leftmost Attack Runs"
+    )
+    lehmer_code_calc(runs.all_games)
+    print(f"Total turns: {len(runs.all_games)}")

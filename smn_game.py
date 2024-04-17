@@ -116,3 +116,11 @@ class Game:
     @property
     def game_id(self):
         return max(list(map(lambda x: x.list_id, self.minions)))
+
+    @property
+    def attack_add(self):
+        return [m.attack_change for m in self.minions]
+
+    @property
+    def minion_names(self):
+        return [m.card_id for m in self.minions]
