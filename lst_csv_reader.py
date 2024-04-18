@@ -122,6 +122,16 @@ def lehmer_code_calc(boards):
                 seen_codes.add(l)
             w.write(f"{l};{a};{m}\n")
 
+def combinations(boards):
+    counts = defaultdict(int)
+    for board in boards:
+        opponent = board.attack_add[0:7].copy()
+        opponent.sort()
+        counts[','.join(map(str, opponent))] += 1
+    with open(f'csv_dump/combinations.txt', 'w') as w:
+        for k, v in counts.items():
+            w.write(f"{k};{v}\n")
+
 
 def rotate(l, n):
     return l[n:] + l[:n]
@@ -157,6 +167,7 @@ if __name__ == '__main__':
     attack_add_counts_position(one_to_one)
     attack_add_counts_position(reset)
     lehmer_code_calc(boards)
+    combinations(boards)
 
     # attack repeats with made attack
     seen_attack = defaultdict(list)

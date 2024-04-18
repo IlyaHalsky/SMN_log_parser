@@ -132,7 +132,15 @@ def lehmer_code_calc(games):
 
 if __name__ == '__main__':
     runs = read_all_games(
-        "G:\\.shortcut-targets-by-id\\1CFpsGpqz65IlXdBeou1MB5lTdJbYxjv1\\Long Strange Trip runs\\Leftmost Attack Runs"
+        "G:\\.shortcut-targets-by-id\\1CFpsGpqz65IlXdBeou1MB5lTdJbYxjv1\\Long Strange Trip runs\\Leftmost Attack Runs",
+        []
     )
     lehmer_code_calc(runs.all_games)
     print(f"Total turns: {len(runs.all_games)}")
+
+    for run in runs.runs:
+        unique = set()
+        for game in run.games:
+            for minion in game.minions:
+                unique.add(minion.card_id)
+        print(len(unique), len(run.games))

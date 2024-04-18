@@ -62,7 +62,7 @@ class Game:
         return all([minion.current_attack is not None for minion in self.minions])
 
     @property
-    def left_out_current(self):
+    def wrong_smn_answers(self):
         lo = []
         self.minions.sort(key=atr('sort_key'))
         self.spells.sort(key=atr('position_safe'))
@@ -70,9 +70,28 @@ class Game:
             solved = False
             for j, minion in enumerate(self.minions):
                 if spell.card_id == minion.card_id:
-                    solved = True
-                    break
+                    if not solved:
+                        solved = True
+                    else:
+                        print("You got gold, but it's a bad thing now")
             if not solved:
+                lo.append(spell)
+        return list(filter(lambda m: len(m.json) != 0, lo))
+
+    @property
+    def correct_smn_answers(self):
+        lo = []
+        self.minions.sort(key=atr('sort_key'))
+        self.spells.sort(key=atr('position_safe'))
+        for i, spell in enumerate(self.spells):
+            solved = False
+            for j, minion in enumerate(self.minions):
+                if spell.card_id == minion.card_id:
+                    if not solved:
+                        solved = True
+                    else:
+                        print("You got gold, but it's a bad thing now")
+            if solved:
                 lo.append(spell)
         return list(filter(lambda m: len(m.json) != 0, lo))
 
