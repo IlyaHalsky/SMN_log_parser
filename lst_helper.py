@@ -10,6 +10,7 @@ from tabulate import tabulate
 
 from smn_game import Game
 from smn_logs import extract_message, parse_minion
+from utils import green, yellow
 
 logging.basicConfig(filename='lst_helper.log', filemode='a', format='%(message)s')
 logger = logging.getLogger()
@@ -59,7 +60,7 @@ def solution(opponent, player):
     o_s = sum(opponent)
     p_s = sum(player)
     best_diff = abs(o_s - p_s)
-    best_move = [-1,-1, -1, -1, -1, -1]
+    best_move = [-1, -1, -1, -1, -1, -1]
     for i, o in enumerate(opponent):
         for j, p in enumerate(player):
             o_n = o_s - o + p
@@ -70,21 +71,53 @@ def solution(opponent, player):
                 best_diff = diff
     return best_move, best_diff
 
+
+special = {
+   'RLK_121':4,
+   'SCH_710':13,
+   'TSC_083':11,
+   'ICC_090':14,
+   'ETC_541':10,
+   'TOY_895':5,
+   'OG_291 ':2,
+   'AT_124 ':12,
+   'BT_126 ':7,
+   'TTN_752':8,
+   'CS3_033':1,
+   'ETC_540':9,
+   'ICC_900':6,
+   'TRL_257':3,
+}
+
+
+def color_minions(minions):
+    list = []
+    for minion in minions:
+        if minion.card_id in special:
+            if minion.attack_change == special[minion.card_id]:
+                list.append(green(f"{minion.attack_change}!!!"))
+            else:
+                list.append(yellow(f"{minion.attack_change}!!!"))
+        else:
+            list.append(str(minion.attack_change))
+    return list
+
+
 def print_game(game: Game, log_format: bool):
-    opponent_string = list(map(lambda m: str(m.attack_change), game.opponents_board))
-    player_string = list(map(lambda m: str(m.attack_change), game.players_board))
-    #possible_moves = []
-    #for o_a in [m.attack_change for m in game.opponents_board]:
+    opponent_string = color_minions(game.opponents_board)
+    player_string = color_minions(game.players_board)
+    # possible_moves = []
+    # for o_a in [m.attack_change for m in game.opponents_board]:
     #    for p_a in [m.attack_change for m in game.players_board]:
     #        if (p_a, o_a) in moves_needed:
     #            possible_moves.append((p_a, o_a))
-    #possible_moves.sort(key=lambda a: a[0])
-    #opp_sum = sum(map(lambda m: m.attack_change, game.opponents_board))
-    #player_sum = sum(map(lambda m: m.attack_change, game.players_board))
-    #best_move, best_diff = solution(list(map(lambda m: m.attack_change, game.opponents_board)), list(map(lambda m: m.attack_change, game.players_board)))
-    #[p_a, o_a, p_p, o_p, p_s, o_s] = best_move
-    #move = ["Pos.",f"{p_p}->{o_p}", "Attack", f"{p_a}->{o_a}",  "Summs:" ,f"P: {p_s} O:{o_s}"]
-    #possible_moves_str = [str(a) for a in possible_moves]
+    # possible_moves.sort(key=lambda a: a[0])
+    # opp_sum = sum(map(lambda m: m.attack_change, game.opponents_board))
+    # player_sum = sum(map(lambda m: m.attack_change, game.players_board))
+    # best_move, best_diff = solution(list(map(lambda m: m.attack_change, game.opponents_board)), list(map(lambda m: m.attack_change, game.players_board)))
+    # [p_a, o_a, p_p, o_p, p_s, o_s] = best_move
+    # move = ["Pos.",f"{p_p}->{o_p}", "Attack", f"{p_a}->{o_a}",  "Summs:" ,f"P: {p_s} O:{o_s}"]
+    # possible_moves_str = [str(a) for a in possible_moves]
     if log_format:
         return f"{','.join(opponent_string)}\n{','.join(player_string)}"
     else:
@@ -92,11 +125,11 @@ def print_game(game: Game, log_format: bool):
             [
                 opponent_string,
                 player_string,
-                #possible_moves_str
-                #["Player", player_sum, "Opponent", opp_sum],
-                #["Difference", player_sum - opp_sum],
-                #move,
-                #["Best Difference", best_diff],
+                # possible_moves_str
+                # ["Player", player_sum, "Opponent", opp_sum],
+                # ["Difference", player_sum - opp_sum],
+                # move,
+                # ["Best Difference", best_diff],
             ], headers=[f"Pos. {i}" for i in range(1, 8)]
         )
 
@@ -194,7 +227,6 @@ if os.path.exists("config.txt"):
         MAC_LOG_PATH = file.read()
 else:
     MAC_LOG_PATH = '/Applications/Hearthstone/Logs/'
-
 
 if __name__ == '__main__':
     debug = False
