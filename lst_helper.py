@@ -1,6 +1,9 @@
 import logging
 import platform
 import time
+import json
+import requests
+
 from itertools import groupby
 from operator import attrgetter as atr
 from typing import Iterator
@@ -14,6 +17,8 @@ from smn_logs import extract_message, parse_minion
 logging.basicConfig(filename='lst_helper.log', filemode='a', format='%(message)s')
 logger = logging.getLogger()
 logger.setLevel(logging.DEBUG)
+logging.getLogger("urllib3").setLevel(logging.WARNING)  # Or logging.ERROR to suppress further
+logging.getLogger("requests").setLevel(logging.WARNING)
 
 
 def hs_running():
@@ -70,7 +75,7 @@ def solution(opponent, player):
                 best_diff = diff
     return best_move, best_diff
 
-def print_game(game: Game, log_format: bool):
+def print_game(game: Game, log_format: bool, json_format: bool):
     opponent_string = list(map(lambda m: str(m.attack_change), game.opponents_board))
     player_string = list(map(lambda m: str(m.attack_change), game.players_board))
     #possible_moves = []
@@ -85,6 +90,10 @@ def print_game(game: Game, log_format: bool):
     #[p_a, o_a, p_p, o_p, p_s, o_s] = best_move
     #move = ["Pos.",f"{p_p}->{o_p}", "Attack", f"{p_a}->{o_a}",  "Summs:" ,f"P: {p_s} O:{o_s}"]
     #possible_moves_str = [str(a) for a in possible_moves]
+    if json_format:
+        output_list = opponent_string + player_string
+        return list(map(int, output_list)) # Convert strings to integers
+        # F-string will add the brackets
     if log_format:
         return f"{','.join(opponent_string)}\n{','.join(player_string)}"
     else:
@@ -175,11 +184,27 @@ def read_log_file(filename: str):
             clear()
             last_game = current_game
             last_game_hash = last_game.hash_lst
-            print_last = print_game(last_game, False)
+            print_last = print_game(last_game, True, False)
+            print_json = print_game(last_game, False, True)
             print(f"Game: {list_offset // 100000 + 1} Turn: {list_num - 2}")
-            logger.info(f"Game: {list_offset // 100000 + 1} Turn: {list_num - 2}")
             print(print_last)
-            logger.info(print_game(last_game, True))
+            print(print_json)
+
+            logger.info(f"Game: {list_offset // 100000 + 1} Turn: {list_num - 2}")
+            logger.info(print_last)
+
+            #TODO: Add the minions in this too.
+            data = {
+                "Game": list_offset // 100000 + 1,
+                "Turn": list_num - 2,
+                "board": print_game(last_game, True, True)
+            }
+
+            url = 'http://155.138.193.23/upload'
+            response = requests.post(url, json=data)
+
+            #logger.info(f"Game: {list_offset // 100000 + 1}, Turn: {list_num - 2}")
+            #logger.info(print_game(last_game, True, False))
         minions = dict(filter(my_filtering_function, minions.items()))
     return minions
 
