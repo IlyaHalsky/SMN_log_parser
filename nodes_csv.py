@@ -1,4 +1,4 @@
-from smn_logs import minions_by_dbfId
+from minions_utils import minions_by_dbfId
 
 with open('nodes.csv', 'w') as f:
     f.write('Id,Label,Interval' + '\n')

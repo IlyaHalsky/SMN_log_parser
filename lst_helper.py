@@ -10,7 +10,6 @@ from tabulate import tabulate
 
 from smn_game import Game
 from smn_logs import extract_message, parse_minion
-from utils import green, yellow
 
 logging.basicConfig(filename='lst_helper.log', filemode='a', format='%(message)s')
 logger = logging.getLogger()
@@ -72,34 +71,10 @@ def solution(opponent, player):
     return best_move, best_diff
 
 
-special = {
-   'RLK_121':4,
-   'SCH_710':13,
-   'TSC_083':11,
-   'ICC_090':14,
-   'ETC_541':10,
-   'TOY_895':5,
-   'OG_291 ':2,
-   'AT_124 ':12,
-   'BT_126 ':7,
-   'TTN_752':8,
-   'CS3_033':1,
-   'ETC_540':9,
-   'ICC_900':6,
-   'TRL_257':3,
-}
-
-
 def color_minions(minions):
     list = []
     for minion in minions:
-        if minion.card_id in special:
-            if minion.attack_change == special[minion.card_id]:
-                list.append(green(f"{minion.attack_change}!!!"))
-            else:
-                list.append(yellow(f"{minion.attack_change}!!!"))
-        else:
-            list.append(str(minion.attack_change))
+        list.append(str(minion.attack_change))
     return list
 
 

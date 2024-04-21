@@ -1,9 +1,12 @@
 import json
 from collections import defaultdict
 from dataclasses import dataclass
+from itertools import groupby
 
+import numpy as np
 from tqdm import tqdm
 
+from minions_utils import minions_by_id
 from test import lehmer_code
 
 
@@ -38,6 +41,7 @@ class LstGame:
         self.minions = list(self.full_json.values())
         keys = [self.username, self.run_id, self.tpe, self.game_type, self.start_id, self.end_id]
         self.for_hashing = ','.join(map(str, keys))
+        self.game_key = '/'.join(map(str, [self.username, self.run_id]))
 
     @staticmethod
     def from_line(line: str):
@@ -117,10 +121,11 @@ def lehmer_code_calc(boards):
     with open(f'csv_dump/lehmer.txt', 'w') as w:
         for l, a, m in final:
             if l in seen_codes:
-                print("pooooog",l, a, m)
+                print("pooooog", l, a, m)
             else:
                 seen_codes.add(l)
             w.write(f"{l};{a};{m}\n")
+
 
 def combinations(boards):
     counts = defaultdict(int)
@@ -131,6 +136,71 @@ def combinations(boards):
     with open(f'csv_dump/combinations.txt', 'w') as w:
         for k, v in counts.items():
             w.write(f"{k};{v}\n")
+
+
+def precise_combinations(boards):
+    boards_grouped = defaultdict(list)
+    for board in boards:
+        opponent = board.attack_add[0:7].copy()
+        opponent.sort()
+        attack_values = (board.attack_add[0], board.attack_add[7])
+        opponent_string = ','.join(map(str, opponent))
+        attack_values_str = str(attack_values)
+        boards_grouped[opponent_string + "-" + attack_values_str].append(board)
+    with open(f'csv_dump/combinations_precise.txt', 'w', encoding='utf-8') as w:
+        for k, v in boards_grouped.items():
+            if len(v) > 2:
+                w.write(f"{k};{v}\n")
+
+
+def print_runs_by_key(boards):
+    keys = ['blood13666#2783/1727089031', 'thsd#11332/2055016827', '生鏽的紅色小狗#33631/155031789']
+    with open(f'csv_dump/select_runs.txt', 'w', encoding='utf-8') as w:
+        for key, boards in groupby(boards, lambda board: board.game_key):
+            if key in keys:
+                w.write(f"{key}\n")
+                boards = list(boards)
+                boards.sort(key=lambda b: b.start_id)
+                for board in boards:
+                    opponent = board.attack_add[0:7].copy()
+                    opponent.sort()
+                    attack_values = (board.attack_add[0], board.attack_add[7])
+                    opponent_string = ','.join(map(str, opponent))
+                    attack_values_str = str(attack_values)
+                    kkk = opponent_string + "-" + attack_values_str
+                    w.write(f"{kkk};{board.full_json}\n")
+
+
+def total_attack_pairs(boards):
+    possible_attacks = defaultdict(int)
+    for board in boards:
+        possible = set()
+        for minion in board.minions[:7]:
+            for minion2 in board.minions[7:]:
+                possible.add(minion['Atk'] + minion2['Atk'])
+        for value in possible:
+            possible_attacks[value] += 1
+    with open(f'csv_dump/total_attack_pairs.txt', 'w', encoding='utf-8') as w:
+        w.write(f"Total boards: {len(boards)}\n")
+        possible_attacks = dict(sorted(possible_attacks.items(), key=lambda item: item[0]))
+        for k, v in possible_attacks.items():
+            w.write(f"{k}:{v}\n")
+
+
+def added_attack_pairs(boards):
+    possible_attacks = defaultdict(int)
+    for board in boards:
+        possible = set()
+        for minion in board.minions[:7]:
+            for minion2 in board.minions[7:]:
+                possible.add(minion['AtkAdd'] + minion2['AtkAdd'])
+        for value in possible:
+            possible_attacks[value] += 1
+    with open(f'csv_dump/added_attack_pairs.txt', 'w', encoding='utf-8') as w:
+        w.write(f"Total boards: {len(boards)}\n")
+        possible_attacks = dict(sorted(possible_attacks.items(), key=lambda item: item[0]))
+        for k, v in possible_attacks.items():
+            w.write(f"{k}:{v}\n")
 
 
 def rotate(l, n):
@@ -146,6 +216,83 @@ def lcsubstring_length(a, b):
                 length = table[i][j] = table[i - 1][j - 1] + 1
                 longest = max(longest, length)
     return longest
+
+
+def board_to_oz(board):
+    result = [[0] * 14 for i in range(14)]
+    for i, m in enumerate(board):
+        result[i][m - 1] = 1
+    return result
+
+
+def boards_to_dataset(boards):
+    counter = 0
+    for key, abbb in groupby(boards, lambda board: board.game_key):
+
+        abb = list(abbb)
+        if len(list(abb)) > 10:
+            counter += 1
+            print(key)
+            abb.sort(key=lambda b: b.start_id)
+            aaa = []
+            for board in abb:
+                oz = board_to_oz(board.attack_add)
+                aaa.append(np.array(oz))
+            aaa = np.array(aaa)
+            print(aaa.shape)
+            np.save(f'csv_dump/dataset/cs{counter}.npy', np.array(aaa))
+
+
+def distributions_by_run(boards):
+    with open(f'csv_dump/distributions_by_run.txt', 'w', encoding='utf-8') as w:
+        for key, abbb in groupby(boards, lambda board: board.game_key):
+            abb = list(abbb)
+            if len(list(abb)) > 500:
+                w.write(key + '\n')
+                abb.sort(key=lambda b: b.start_id)
+                attack_counts = defaultdict(lambda: defaultdict(int))
+                set_counts = defaultdict(int)
+                rarity_counts = defaultdict(int)
+                type_counts = defaultdict(int)
+                has_type_counts = defaultdict(int)
+                class_counts = defaultdict(int)
+                for board in abb:
+                    for minion in board.minions:
+                        attack_counts[minion['CardID']][minion['AtkAdd']] += 1
+                        if minion['CardID'] == 'SCH_199t':
+                            card_id = 'SCH_199'
+                        else:
+                            card_id = minion['CardID']
+                        minion_json = minions_by_id[card_id]
+                        set_counts[minion_json['set']] += 1
+                        races = minion_json.get('races', [])
+                        for race in races:
+                            type_counts[race] += 1
+                        if len(races) > 0:
+                            has_type_counts['y'] += 1
+                        else:
+                            has_type_counts['n'] += 1
+                        rarity_counts[minion_json['rarity']] += 1
+                        class_counts[minion_json['cardClass']] += 1
+                attack_counts = dict(sorted(attack_counts.items(), key=lambda item: sum(item[1].values())))
+                set_counts = dict(sorted(set_counts.items(), key=lambda item: item[0]))
+                rarity_counts = dict(sorted(rarity_counts.items(), key=lambda item: item[0]))
+                type_counts = dict(sorted(type_counts.items(), key=lambda item: item[0]))
+                class_counts = dict(sorted(class_counts.items(), key=lambda item: item[0]))
+                w.write(f"set {set_counts} \n")
+                w.write(f"rarity {rarity_counts} \n")
+                w.write(f"type {type_counts} \n")
+                w.write(f"has type {has_type_counts} \n")
+                w.write(f"class {class_counts} \n")
+                w.write(f'{len(list(abb))}\n')
+
+def pairs_of_total_attack(boards):
+    total_count = 0
+    for board in boards:
+        totals = set([minion['Atk'] for minion in board.minions])
+        if len(totals) < 14:
+            total_count += 1
+    print(total_count, len(boards))
 
 
 if __name__ == '__main__':
@@ -166,14 +313,21 @@ if __name__ == '__main__':
     attack_add_counts(reset)
     attack_add_counts_position(one_to_one)
     attack_add_counts_position(reset)
-    lehmer_code_calc(boards)
-    combinations(boards)
+    lehmer_code_calc(one_to_one)
+    combinations(one_to_one)
+    precise_combinations(one_to_one)
+    print_runs_by_key(one_to_one)
+    total_attack_pairs(boards)
+    added_attack_pairs(boards)
+    # boards_to_dataset(one_to_one)
+    distributions_by_run(one_to_one)
+    pairs_of_total_attack(boards)
 
     # attack repeats with made attack
     seen_attack = defaultdict(list)
     for board in one_to_one:
         attack_copy = board.attack_add.copy()
-        #attack_copy[0], attack_copy[7] = attack_copy[7], attack_copy[0]
+        # attack_copy[0], attack_copy[7] = attack_copy[7], attack_copy[0]
         attack_copy = [*attack_copy[:7], *list(reversed(attack_copy[7:]))]
         for i in range(14):
             attack_add = rotate(attack_copy, i)

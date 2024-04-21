@@ -1,5 +1,5 @@
 import os
-import shutil
+from collections import defaultdict
 from dataclasses import dataclass
 from difflib import SequenceMatcher
 from itertools import groupby
@@ -85,6 +85,7 @@ def track_ball(minion_pos: int, start: State, pipes: [Pipe]) -> [Ball]:
         trip.append(tracking)
     return trip
 
+
 def track_position(minion_pos: int, start: State, pipes: [Pipe]) -> [int]:
     tracking = start.balls[minion_pos]
     trip = [minion_pos]
@@ -93,11 +94,15 @@ def track_position(minion_pos: int, start: State, pipes: [Pipe]) -> [int]:
         tracking = pipe.changed_into(tracking)
     return trip
 
+
 s = SequenceMatcher()
+
+
 def longest_common(list1, list2):
     s.set_seqs(list1, list2)
     a, b, size = s.find_longest_match()
-    return list1[a:a+size], a, b, size
+    return list1[a:a + size], a, b, size
+
 
 if __name__ == '__main__':
     log_folder = "G:\\.shortcut-targets-by-id\\1CFpsGpqz65IlXdBeou1MB5lTdJbYxjv1\\Long Strange Trip runs\\Leftmost Attack Runs"
@@ -137,30 +142,33 @@ if __name__ == '__main__':
 
         first_game, *tail = games
         first_state = State.from_game(first_game)
-        prev_state = first_state.do_attack(1, 1)
+        prev_state = first_state
+        # prev_state = prev_state.do_attack(1, 1)
         current_pipes = []
-        #print(prev_state.attack_changes)
+        # print(prev_state.attack_changes)
         for current in tail:
             current_state = State.from_game(current)
             pipe = Pipe(prev_state, current_state)
             current_pipes.append(pipe)
-            #print(','.join([str(i + 1) for i in pipe.pipe]))
-            prev_state = current_state.do_attack(1, 1)
+            # print(','.join([str(i + 1) for i in pipe.pipe]))
+            # prev_state = current_state.do_attack(1, 1)
+            prev_state = current_state
         all_pipes.extend(current_pipes)
-        for i in range(14):
-            #trip = track_ball(i, first_state, current_pipes)
-            #trip_names = []
-            #for ball in trip:
-            #    trip_names.append(ball.minion_id)
-            #all_trips.append(trip_names)
-            trip = track_position(i, first_state, current_pipes)
-            all_trips.append((trip, log_name, i))
-            #if os.path.exists(f"trip/{i}"):
-            #    shutil.rmtree(f"trip/{i}")
-            #os.makedirs(f"trip/{i}")
-            #for j, ball in enumerate(trip):
-            #    print(j, ball)
-            #    shutil.copy(f"image_cache/{ball.minion_id}.png", f"trip/{i}/{j}.png")
+        break
+        # for i in range(14):
+        #    #trip = track_ball(i, first_state, current_pipes)
+        #    #trip_names = []
+        #    #for ball in trip:
+        #    #    trip_names.append(ball.minion_id)
+        #    #all_trips.append(trip_names)
+        #    trip = track_position(i, first_state, current_pipes)
+        #    all_trips.append((trip, log_name, i))
+        #    #if os.path.exists(f"trip/{i}"):
+        #    #    shutil.rmtree(f"trip/{i}")
+        #    #os.makedirs(f"trip/{i}")
+        #    #for j, ball in enumerate(trip):
+        #    #    print(j, ball)
+        #    #    shutil.copy(f"image_cache/{ball.minion_id}.png", f"trip/{i}/{j}.png")
 
     for key, value in groupby(all_pipes, lambda pipe: pipe.pipe_key):
         pipes = list(value)
@@ -173,8 +181,19 @@ if __name__ == '__main__':
         for j in range(i + 1, len(all_trips)):
             trip2, name2, i2 = all_trips[j]
             common, a, b, size = longest_common(trip1, trip2)
-            commons.append((common, size, (a,b), (name1, name2), (i1, i2)))
+            commons.append((common, size, (a, b), (name1, name2), (i1, i2)))
     commons.sort(key=lambda x: x[1], reverse=True)
     for common, size, start, names, iis in commons:
         if size > 5:
             print(common, size, start, names, iis)
+
+    group_pipes = defaultdict(list)
+    for pipe in all_pipes:
+        before = pipe.before
+        group_pipes[(before[0].attack_change, before[7].attack_change)].append(pipe)
+
+    for key, value in group_pipes.items():
+        if len(value) > 1:
+            print(key)
+            for v in value:
+                print(v.before.attack_changes, v.pipe, v.after.attack_changes)

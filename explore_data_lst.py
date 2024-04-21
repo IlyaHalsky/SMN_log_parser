@@ -1,6 +1,6 @@
 from collections import defaultdict
 
-from lehmer_db import lehmer_db_csv
+from lehmer_db import lehmer_db_csv, lehmer_db_smn
 from parse_lst import read_all_games
 from test import lehmer_code
 
@@ -122,11 +122,13 @@ def lehmer_code_calc(games):
     with open(f'analysis/lehmer.txt', 'w') as w:
         for l, a, m in final:
             if l in seen_codes:
-                print("pooooog", l, a, m)
+                print("pooooog1", l, a, m)
             else:
                 seen_codes.add(l)
             if lehmer_db_csv.seen(l) is not None:
-                print("pooooog", l, a, m)
+                print("pooooog2", l, a, m)
+            if lehmer_db_smn.seen(l) is not None:
+                print("pooooog3", l, a, m)
             w.write(f"{l};{a};{m}\n")
 
 
@@ -138,9 +140,7 @@ if __name__ == '__main__':
     lehmer_code_calc(runs.all_games)
     print(f"Total turns: {len(runs.all_games)}")
 
-    for run in runs.runs:
-        unique = set()
-        for game in run.games:
-            for minion in game.minions:
-                unique.add(minion.card_id)
-        print(len(unique), len(run.games))
+    #for game in runs.all_games:
+    #    print(game.game_id)
+    #    for minion in game.minions:
+    #        print(minion)
