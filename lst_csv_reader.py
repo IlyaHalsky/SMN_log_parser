@@ -50,6 +50,13 @@ class LstGame:
         return LstGame(int(id), user, int(game_id), int(tpe), json.loads(json_raw))
 
 
+def sort_key(input):
+    return dict(sorted(input.items(), key=lambda item: item[0]))
+
+
+def sort_value(input):
+    return dict(sorted(input.items(), key=lambda item: item[1]))
+
 def clean_data(boards):
     seen = set()
     seen2 = set()
@@ -286,6 +293,34 @@ def distributions_by_run(boards):
                 w.write(f"class {class_counts} \n")
                 w.write(f'{len(list(abb))}\n')
 
+def compare_same(b1, b2):
+    count = 0
+    for i in range(14):
+        if b1[i] == b2[i]:
+            count += 1
+    return count
+
+def sticky_by_run(boards):
+    with open(f'csv_dump/sticky_by_run.txt', 'w', encoding='utf-8') as w:
+        counts = defaultdict(int)
+        run_length = []
+        for key, abbb in groupby(boards, lambda board: board.game_key):
+            abb = list(abbb)
+            if len(list(abb)) > 100:
+                run_length.append(len(list(abb)))
+                abb.sort(key=lambda b: b.start_id)
+                last = None
+                for board in abb:
+                    if last is None:
+                        last = board.attack_add
+                    else:
+                        counts[compare_same(last, board.attack_add)] += 1
+                        last = board.attack_add
+        counts = sort_value(counts)
+        w.write(f"{run_length}\n")
+        w.write(f"{counts}\n")
+
+
 def pairs_of_total_attack(boards):
     total_count = 0
     for board in boards:
@@ -322,6 +357,7 @@ if __name__ == '__main__':
     # boards_to_dataset(one_to_one)
     distributions_by_run(one_to_one)
     pairs_of_total_attack(boards)
+    sticky_by_run(one_to_one)
 
     # attack repeats with made attack
     seen_attack = defaultdict(list)

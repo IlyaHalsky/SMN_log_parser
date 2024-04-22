@@ -131,6 +131,13 @@ def lehmer_code_calc(games):
                 print("pooooog3", l, a, m)
             w.write(f"{l};{a};{m}\n")
 
+def compare_boards(g1, g2):
+    a1 = g1.attack_add
+    a2 = g2.attack_add
+    similar = [0] * 14
+    for i in range(14):
+        similar[i] = 1 if a1[i] == a2[i] else 0
+    return similar
 
 if __name__ == '__main__':
     runs = read_all_games(
@@ -140,7 +147,20 @@ if __name__ == '__main__':
     lehmer_code_calc(runs.all_games)
     print(f"Total turns: {len(runs.all_games)}")
 
-    #for game in runs.all_games:
-    #    print(game.game_id)
-    #    for minion in game.minions:
-    #        print(minion)
+    counts = defaultdict(int)
+    for run in runs.runs:
+        print(len(run.games))
+        prev = None
+        for game in run.games:
+            if prev is None:
+                prev = game
+            else:
+                similar = compare_boards(prev, game)
+                prev = game
+                counts[','.join(map(str, similar))] += 1
+    counts = sort_value(counts)
+    totals = defaultdict(int)
+    for k, v in counts.items():
+        totals[k.count('1')] += v
+    totals = sort_value(totals)
+    print(totals)
