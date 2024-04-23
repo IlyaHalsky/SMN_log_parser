@@ -4,6 +4,12 @@ import platform
 from configparser import ConfigParser
 from dataclasses import dataclass
 
+def parse_separator(separator):
+    if separator == 'SPACE':
+        return ' '
+    if separator == 'TAB':
+        return '\t'
+    return separator
 
 @dataclass
 class LSTConfig:
@@ -19,8 +25,8 @@ class LSTConfig:
         self.show_mana = int(self.config['display']['mana']) == 1
         self.show_minion_name = int(self.config['display']['minion_name']) == 1
 
-        self.log_array_separator = self.config['logging']['array_separator']
-        self.log_type_seperator = self.config['logging']['type_separator']
+        self.log_array_separator = parse_separator(self.config['logging']['array_separator'])
+        self.log_type_seperator = parse_separator(self.config['logging']['type_separator'])
         self.log_attack_add = int(self.config['logging']['attack_add']) == 1
         self.log_attack_full = int(self.config['logging']['attack_full']) == 1
         self.log_attack_base = int(self.config['logging']['attack_base']) == 1

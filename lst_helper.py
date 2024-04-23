@@ -161,7 +161,7 @@ if __name__ == '__main__':
             time.sleep(20)
         else:
             time.sleep(5)
-        log_folders = list(os.listdir(config.hs_logs_path))
+        log_folders = [folder for folder in os.listdir(config.hs_logs_path) if 'Hearthstone_' in folder]
         log_folders.sort()
         current_log_folder = log_folders[-1]
         log_date = current_log_folder.replace('Hearthstone_', '')
