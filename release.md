@@ -17,8 +17,8 @@ Different flavours:
   - **Do not interact with puzzle!**, exit puzzle by `Esc -> Leave`, close Hearthstone.
   - Run tool, it will output your run before reconnecting into `lst_power_date.log`
 
-Tool heavily relies on Zone log.
-How to enable it:
+Tools rely on Zone and Power logs.
+How to enable them:
 - If you use Hearthstone Deck Tracker, this is sometimes already done for you, but still worth verifying
 Go to %LocalAppData%/Blizzard/Hearthstone (paste that path in the run dialog - Win+R to open) on Windows, or /Users/USERNAME/Library/Preferences/Blizzard/Hearthstone on Mac
 - Open (or create) the log.config file with any text editor (note: if creating yourself, make sure your text editor doesn’t save it as log.config.txt)
@@ -31,7 +31,15 @@ ConsolePrinting=false
 ScreenPrinting=false
 Verbose=true
 ```
-
+- Edit the file so that it has a [Power] section that looks like this:
+```
+[Power]
+LogLevel=1
+FilePrinting=true
+ConsolePrinting=false
+ScreenPrinting=false
+Verbose=true
+```
 - Or you can just replace the entire file with [this file](https://gist.githubusercontent.com/IlyaHalsky/024db2ec71a4eabb660adb0cffcf5cb3/raw/1c099885c2d9a204b4910344d456f02d0244d525/log.config)
 - Now go to C:\Program Files (x86)\Hearthstone or /Applications/Hearthstone on Mac
 - Open (or create) the client.config file with any text editor (note: if creating yourself, make sure your text editor doesn’t save it as client.config.txt)
