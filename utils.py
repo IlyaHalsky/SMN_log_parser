@@ -15,3 +15,6 @@ def yellow(text):
 
 def blue(text):
     return colored(text, 'blue')
+
+def cyan(text):
+    return colored(text, 'cyan')
