@@ -21,7 +21,7 @@ if platform.system() == 'Windows':
     arch = []
 else:
     filename = '-n lst_helper.mac'
-    arch = ['--target-arch universal2']
+    arch = []
 PyInstaller.__main__.run(
     [
         'lst_helper.py',
