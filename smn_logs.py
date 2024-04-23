@@ -168,8 +168,8 @@ class Minion:
             set = minions_by_name[self.name]['set']
         return set_names[CardSet[set]]
 
-    #@property
-    #def en_image(self):
+    # @property
+    # def en_image(self):
     #    url = f"https://art.hearthstonejson.com/v1/render/latest/enUS/256x/{self.card_id}.png"
     #    if not os.path.exists("./image_cache"):
     #        os.makedirs(f"./image_cache")
@@ -208,6 +208,9 @@ class List:
             self.minions[minion.id] = minion
 
 
+RESTART_OFFSET = 100000
+
+
 def read_log_file(filename: str):
     list_num = 0
     list_offset = 0
@@ -220,7 +223,7 @@ def read_log_file(filename: str):
                 if message >= list_num:
                     list_num = message
                 else:
-                    list_offset = list_offset + 100000
+                    list_offset = list_offset + RESTART_OFFSET
                     list_num = message
             if type == 'list-item':
                 parse_minion(date, filename, message, minions, list_offset)

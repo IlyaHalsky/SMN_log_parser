@@ -3,7 +3,7 @@ from dataclasses import dataclass
 from hashlib import sha256
 from typing import List
 
-from smn_logs import Minion
+from smn_logs import Minion, RESTART_OFFSET
 
 
 @dataclass
@@ -19,9 +19,16 @@ class Game:
     def players_board(self) -> List[Minion]:
         return list(self.minions[7:])
 
+    def minion_by_id(self, minion_id) -> Minion:
+        return next(minion for minion in self.minions if minion.id == minion_id)
+
     @property
     def list_id(self):
         return self.minions[0].list_id
+
+    @property
+    def game_offset(self):
+        return self.list_id // RESTART_OFFSET
 
     @property
     def opponents_board_current(self) -> List[Minion]:
@@ -111,6 +118,8 @@ class Game:
                     return f"{spell.name}: Spell {j + 1} -> Player {i + 1}"
 
     def __post_init__(self):
+        self.attacker = None
+        self.defender = None
         self.correct = ['  0'] * len(self.spells)
         self.position = [' -1'] * len(self.spells)
         self.used = []

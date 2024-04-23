@@ -11,7 +11,7 @@ from tabulate import tabulate, SEPARATING_LINE
 from helper_utils import clear_console, hs_running, follow_file
 from lst.lst_config import read_config, LSTConfig
 from smn_game import Game
-from smn_logs import extract_message, parse_minion
+from smn_logs import extract_message, parse_minion, RESTART_OFFSET
 from utils import yellow, red, cyan
 
 
@@ -76,6 +76,8 @@ def combine_minions(minion_strings, config: LSTConfig):
         [config.log_array_separator.join(map(str, minions)) for minions in minion_strings]
     )
 
+def get_attack_log(game: Game, config: LSTConfig):
+    return f"{game.attacker.attack_change}{config.log_array_separator}{game.defender.attack_change}"
 
 def log_game(header, game: Game, logger, config: LSTConfig):
     opponent_strings = get_minions_log(game.opponents_board, config)
@@ -83,6 +85,8 @@ def log_game(header, game: Game, logger, config: LSTConfig):
     logger.info(header)
     logger.info(combine_minions(opponent_strings, config))
     logger.info(combine_minions(player_strings, config))
+    if game.attacker is not None and game.defender is not None:
+        logger.info(get_attack_log(game, config))
 
 
 def read_log_file(filename: str, logger, config):
@@ -108,7 +112,7 @@ def read_log_file(filename: str, logger, config):
             if message >= list_num:
                 list_num = message
             else:
-                list_offset = list_offset + 100000
+                list_offset = list_offset + RESTART_OFFSET
                 list_num = message
         if type == 'list-item':
             parse_minion(date, filename, message, minions, list_offset)
@@ -140,7 +144,7 @@ def read_log_file(filename: str, logger, config):
             clear_console()
             last_game = current_game
             last_game_hash = last_game.hash_lst
-            header = f"Game: {list_offset // 100000 + 1} Turn: {list_num - 2}"
+            header = f"Game: {list_offset // RESTART_OFFSET + 1} Turn: {list_num - 2}"
             print_game(header, last_game, config)
             log_game(header, last_game, logger, config)
         minions = dict(filter(my_filtering_function, minions.items()))
@@ -179,5 +183,5 @@ if __name__ == '__main__':
         read_log_file(log_path, logger, config)
     except Exception as e:
         traceback.print_exc()
-        with open("lst_helper_crash.txt", "w") as crashLog:
+        with open("./lst_helper_crash.txt", "w") as crashLog:
             crashLog.write(traceback.format_exc())

@@ -26,3 +26,14 @@ PyInstaller.__main__.run([
     '--add-data', "./cards.collectible.json:.",
     filename
 ])
+
+if platform.system() == 'Windows':
+    filename = '-n lst_power_parser.exe'
+else:
+    filename = '-n lst_power_parser'
+PyInstaller.__main__.run([
+    'lst_power_parser.py',
+    '--onefile',
+    '--add-data', "./cards.collectible.json:.",
+    filename
+])

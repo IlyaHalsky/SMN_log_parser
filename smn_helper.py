@@ -9,7 +9,7 @@ import psutil
 from tabulate import tabulate
 
 from smn_game import Game
-from smn_logs import extract_message, parse_minion
+from smn_logs import extract_message, parse_minion, RESTART_OFFSET
 from utils import red, green
 
 logging.basicConfig(filename='smn_helper.log', filemode='w', format='%(message)s')
@@ -101,7 +101,7 @@ def read_log_file(filename: str):
             if message >= list_num:
                 list_num = message
             else:
-                list_offset = list_offset + 100000
+                list_offset = list_offset + RESTART_OFFSET
                 list_num = message
         if type == 'list-item':
             parse_minion(date, filename, message, minions, list_offset)
@@ -138,9 +138,9 @@ def read_log_file(filename: str):
             last_game_hash = last_game.hash
 
             print_last = print_game(last_game)
-            print(f"Game: {list_offset // 100000 + 1} Turn: {list_num - 2}")
+            print(f"Game: {list_offset // RESTART_OFFSET + 1} Turn: {list_num - 2}")
             print(print_last)
-            #log_game(f"Game: {list_offset // 100000 + 1} Turn: {list_num - 2}", last_game)
+            #log_game(f"Game: {list_offset // RESTART_OFFSET + 1} Turn: {list_num - 2}", last_game)
             # image = create_board_image(last_game, 255 if has_dups else 0)
             # image = cv2.resize(image, (0, 0), fx=0.7, fy=0.7)
             # cv2.imshow('board', image)
