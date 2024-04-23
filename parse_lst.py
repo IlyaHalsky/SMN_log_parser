@@ -1,5 +1,6 @@
 import os
 from _operator import attrgetter as atr
+from collections import defaultdict
 from dataclasses import dataclass
 from itertools import groupby
 
@@ -13,6 +14,16 @@ from smn_logs import read_log_file
 class Run:
     games: [Game]
 
+    @property
+    def last_offset_games(self) -> [Game]:
+        current_offset = 0
+        games = []
+        for game in self.games:
+            if current_offset != game.game_offset:
+                current_offset = game.game_offset
+                games = []
+            games.append(game)
+        return games
 
 @dataclass
 class Runs:
@@ -26,7 +37,7 @@ def read_all_games(logs_path, log_names=None):
     if log_names is None:
         log_names = []
     runs = []
-    for log_file in tqdm(os.listdir(logs_path)):
+    for log_file in tqdm(os.listdir(logs_path), desc="Reading Zone logs"):
         log_path = os.path.join(logs_path, log_file)
         if os.path.isdir(log_path):
             continue
