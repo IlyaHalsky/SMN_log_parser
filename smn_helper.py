@@ -1,22 +1,19 @@
 import logging
 import platform
 import time
-from collections import defaultdict
-from dataclasses import dataclass
 from itertools import groupby
 from operator import attrgetter as atr
-from typing import Iterator, List
+from typing import Iterator
 
-import cv2
 import psutil
 from tabulate import tabulate
 
 from smn_game import Game
-from smn_logs import extract_message, parse_minion, Minion, minions_by_id, resource_path
-from visualize import create_board_image
+from smn_logs import extract_message, parse_minion
+from utils import red, green
 
-logging.basicConfig(filename='smn_helper_gold.log', filemode='a', format='%(name)s - %(levelname)s - %(message)s')
-logger=logging.getLogger()
+logging.basicConfig(filename='smn_helper.log', filemode='w', format='%(message)s')
+logger = logging.getLogger()
 logger.setLevel(logging.DEBUG)
 
 
@@ -48,16 +45,32 @@ def follow(file, sleep_sec=0.1) -> Iterator[str]:
             break
     yield ''
 
-
+def color_spells(correct, spells):
+    return list(map(lambda spell: red(spell.name) if spell.card_id not in correct else green(spell.name), spells))
 
 def print_game(game: Game):
     opponent_string = list(map(lambda m: m.name, game.opponents_board))
     player_string = list(map(lambda m: m.name, game.players_board))
-    #next_step = [game.next_step]
-    spells_string1 = list(map(lambda m: m.name, game.spells[0:7]))
-    spells_string2 = list(map(lambda m: m.name, game.spells[7:14]))
-    spells_string3 = list(map(lambda m: m.name, game.spells[14:]))
-    return tabulate([opponent_string, player_string, ["Spells:"], spells_string1, spells_string2, spells_string3], headers=[f"Pos. {i}" for i in range(1, 8)])
+    # next_step = [game.next_step]
+    correct_answers = [s.card_id for s in game.correct_smn_answers]
+    spells_string1 = color_spells(correct_answers, game.spells[0:7])
+    spells_string2 = color_spells(correct_answers, game.spells[7:14])
+    spells_string3 = color_spells(correct_answers, game.spells[14:])
+    return tabulate(
+        [opponent_string, player_string, ["Spells:"], spells_string1, spells_string2, spells_string3],
+        headers=[f"Pos. {i}" for i in range(1, 8)]
+    )
+
+
+def log_game(header: str, game: Game):
+    logger.info(header)
+    correct_answers = [s.card_id for s in game.correct_smn_answers]
+    for i, minion in enumerate(game.opponents_board):
+        logger.info(f"{minion.card_id}    ;O{i + 1};B{i + 1};H{correct_answers.index(minion.card_id) + 1};{minion.name}")
+    for i, minion in enumerate(game.players_board):
+        logger.info(
+            f"{minion.card_id}    ;P{i + 1};B{i + 1 + 7};H{correct_answers.index(minion.card_id) + 1};{minion.name}"
+        )
 
 
 import os
@@ -80,7 +93,6 @@ def read_log_file(filename: str):
 
     last_game = None
     last_game_hash = ''
-    gold_so_far = []
 
     for line_n in follow(open(filename, 'r')):
         line = line_n[:-1]
@@ -95,6 +107,7 @@ def read_log_file(filename: str):
             parse_minion(date, filename, message, minions, list_offset)
 
         current_game = None
+        carry_over = []
         for list_id, minions_group in groupby(minions.values(), lambda minion: minion.list_id):
             try:
                 minions_list_all = [minion for minion in list(minions_group)]
@@ -102,7 +115,16 @@ def read_log_file(filename: str):
                 only_minions_list = [minion for minion in minions_list if not minion.spell]
                 only_spells_list = [minion for minion in minions_list if minion.spell]
                 if len(only_minions_list) < 14 or len(only_spells_list) < 20:
-                    continue
+                    if len(only_minions_list) > 0 and only_minions_list[-1].card_id == 'SCH_199':
+                        carry_over = only_minions_list
+                        continue
+                    if len(carry_over) == 0:
+                        continue
+                    else:
+                        only_minions_list = [*only_minions_list, *carry_over]
+                        carry_over = []
+                        if len(only_minions_list) != 14:
+                            continue
                 if any([spell.name == '???' for spell in only_spells_list]):
                     continue
                 only_minions_list.sort(key=atr('sort_key'))
@@ -115,46 +137,28 @@ def read_log_file(filename: str):
             last_game = current_game
             last_game_hash = last_game.hash
 
-            #has_dups = False
-            #group_by = lambda card: card.card_id
-            #grouped = defaultdict(list)
-            #for spell in last_game.spells:
-            #    grouped[group_by(spell)].append(spell)
-            #for key, value in grouped.items():
-            #    if len(value) > 1:
-            #        print(f"Duplicate, POG: {key} {minions_by_id[key]['name']}")
-            #        logger.info(f"Duplicate, POG: {key} {minions_by_id[key]['name']}")
-            #        gold_so_far.append(minions_by_id[key]['name'])
-            #        for card in value:
-            #            card.color[1] = 255
-            #        for minion in last_game.minions:
-            #            if group_by(minion) == key:
-            #                minion.color[1] = 255
-            #        has_dups = True
             print_last = print_game(last_game)
             print(f"Game: {list_offset // 100000 + 1} Turn: {list_num - 2}")
             print(print_last)
-            #if not has_dups:
-            #    print("Keep on panning!")
-            #    print(f"Gold so far: {','.join(gold_so_far)}")
-            #    #playsound(resource_path("rich.wav"))
-            #else:
-            #    print("Hoowee, I'm rich!")
-            #    print(f"Gold so far: {','.join(gold_so_far)}")
-            #    playsound(resource_path("rich.wav"))
-            #image = create_board_image(last_game, 255 if has_dups else 0)
-            #image = cv2.resize(image, (0, 0), fx=0.7, fy=0.7)
-            #cv2.imshow('board', image)
-            #cv2.waitKey(1)
+            #log_game(f"Game: {list_offset // 100000 + 1} Turn: {list_num - 2}", last_game)
+            # image = create_board_image(last_game, 255 if has_dups else 0)
+            # image = cv2.resize(image, (0, 0), fx=0.7, fy=0.7)
+            # cv2.imshow('board', image)
+            # cv2.waitKey(1)
         minions = dict(filter(my_filtering_function, minions.items()))
     return minions
+
 
 if os.path.exists("config.txt"):
     with open('config.txt', 'r') as file:
         WIN_LOG_PATH = file.read()
 else:
     WIN_LOG_PATH = 'C:\\Program Files (x86)\\Hearthstone\\Logs\\'
-MAC_LOG_PATH = '/Applications/Hearthstone/Logs/'
+if os.path.exists("config.txt"):
+    with open('config.txt', 'r') as file:
+        MAC_LOG_PATH = file.read()
+else:
+    MAC_LOG_PATH = '/Applications/Hearthstone/Logs/'
 
 if __name__ == '__main__':
     debug = False

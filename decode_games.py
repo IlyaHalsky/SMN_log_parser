@@ -17,7 +17,8 @@ if __name__ == '__main__':
         decoded_boards = []
         swaps = []
         for game in run.games:
-            board = game.attack_add
+            board = game.attack_add.copy()
+            #board[0], board[7] = board[7], board[0]
             decoded = decode_board(swaps, board)
             swaps.append((board[0], board[7]))
             decoded_boards.append(decoded)

@@ -1,6 +1,6 @@
 from collections import defaultdict
 
-from smn_logs import minions_by_id
+from minions_utils import minions_by_id
 
 if __name__ == '__main__':
     rarities = defaultdict(int)

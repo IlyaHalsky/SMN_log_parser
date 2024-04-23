@@ -1,124 +1,91 @@
 import logging
-import platform
+import os
+import sys
 import time
-import json
-import requests
-
+import traceback
 from itertools import groupby
 from operator import attrgetter as atr
-from typing import Iterator
 
-import psutil
-from tabulate import tabulate
+from tabulate import tabulate, SEPARATING_LINE
 
+from helper_utils import clear_console, hs_running, follow_file
+from lst.lst_config import read_config, LSTConfig
 from smn_game import Game
 from smn_logs import extract_message, parse_minion
-
-logging.basicConfig(filename='lst_helper.log', filemode='a', format='%(message)s')
-logger = logging.getLogger()
-logger.setLevel(logging.DEBUG)
-logging.getLogger("urllib3").setLevel(logging.WARNING)  # Or logging.ERROR to suppress further
-logging.getLogger("requests").setLevel(logging.WARNING)
+from utils import yellow, red, cyan
 
 
-def hs_running():
-    for pid in psutil.pids():
-        if psutil.pid_exists(pid):
-            try:
-                if 'Hearthstone' in psutil.Process(pid).name():
-                    return True
-            except:
-                pass
-    return False
+def get_minions_string(minions, config: LSTConfig):
+    result = []
+    for i, minion in enumerate(minions):
+        minion_strings = []
+        if config.show_attack_add:
+            minion_strings.append(minion.attack_change)
+        if config.show_attack_full:
+            minion_strings.append(minion.current_attack)
+        if config.show_attack_base:
+            minion_strings.append(yellow(minion.attack))
+        if config.show_health:
+            minion_strings.append(red(minion.health))
+        if config.show_mana:
+            minion_strings.append(cyan(minion.mana))
+        if config.show_minion_name:
+            minion_strings.append(minion.name)
+        result.append(' '.join(map(str, minion_strings)))
+    return result
 
 
-def follow(file, sleep_sec=0.1) -> Iterator[str]:
-    """ Yield each line from a file as they are written.
-    `sleep_sec` is the time to sleep after empty reads. """
-    line = ''
-    while True:
-        tmp = file.readline()
-        if tmp is not None and tmp != "":
-            line += tmp
-            if line.endswith("\n"):
-                yield line
-                line = ''
-        elif hs_running():
-            time.sleep(sleep_sec)
-        else:
-            break
-    yield ''
-
-
-# def print_game(game: Game, log_format: bool, initial_map):
-#    #opponent_string = list(map(lambda m: str(m.attack_change), game.opponents_board))
-#    #player_string = list(map(lambda m: str(m.attack_change), game.players_board))
-#    opponent_string = list(map(lambda m: f"{initial_map[m.attack_change]}({m.attack_change})", game.opponents_board))
-#    player_string = list(map(lambda m: f"{initial_map[m.attack_change]}({m.attack_change})", game.players_board))
-#    if log_format:
-#        return f"{','.join(opponent_string)}\n{','.join(player_string)}"
-#    else:
-#        return tabulate([opponent_string, player_string], headers=[f"Pos. {i}" for i in range(1, 8)])
-
-def solution(opponent, player):
-    o_s = sum(opponent)
-    p_s = sum(player)
-    best_diff = abs(o_s - p_s)
-    best_move = [-1,-1, -1, -1, -1, -1]
-    for i, o in enumerate(opponent):
-        for j, p in enumerate(player):
-            o_n = o_s - o + p
-            p_n = p_s - p + o
-            diff = abs(o_n - p_n)
-            if diff <= best_diff:
-                best_move = [p, o, j + 1, i + 1, p_n, o_n]
-                best_diff = diff
-    return best_move, best_diff
-
-def print_game(game: Game, log_format: bool, json_format: bool):
-    opponent_string = list(map(lambda m: str(m.attack_change), game.opponents_board))
-    player_string = list(map(lambda m: str(m.attack_change), game.players_board))
-    #possible_moves = []
-    #for o_a in [m.attack_change for m in game.opponents_board]:
-    #    for p_a in [m.attack_change for m in game.players_board]:
-    #        if (p_a, o_a) in moves_needed:
-    #            possible_moves.append((p_a, o_a))
-    #possible_moves.sort(key=lambda a: a[0])
-    #opp_sum = sum(map(lambda m: m.attack_change, game.opponents_board))
-    #player_sum = sum(map(lambda m: m.attack_change, game.players_board))
-    #best_move, best_diff = solution(list(map(lambda m: m.attack_change, game.opponents_board)), list(map(lambda m: m.attack_change, game.players_board)))
-    #[p_a, o_a, p_p, o_p, p_s, o_s] = best_move
-    #move = ["Pos.",f"{p_p}->{o_p}", "Attack", f"{p_a}->{o_a}",  "Summs:" ,f"P: {p_s} O:{o_s}"]
-    #possible_moves_str = [str(a) for a in possible_moves]
-    if json_format:
-        output_list = opponent_string + player_string
-        return list(map(int, output_list)) # Convert strings to integers
-        # F-string will add the brackets
-    if log_format:
-        return f"{','.join(opponent_string)}\n{','.join(player_string)}"
-    else:
-        return tabulate(
+def print_game(header: str, game: Game, config: LSTConfig):
+    opponent_string = get_minions_string(game.opponents_board, config)
+    player_string = get_minions_string(game.players_board, config)
+    print(header)
+    print(
+        tabulate(
             [
                 opponent_string,
                 player_string,
-                #possible_moves_str
-                #["Player", player_sum, "Opponent", opp_sum],
-                #["Difference", player_sum - opp_sum],
-                #move,
-                #["Best Difference", best_diff],
+                SEPARATING_LINE,
+                [f"Pos. {i}" for i in range(8, 15)]
             ], headers=[f"Pos. {i}" for i in range(1, 8)]
         )
+    )
 
 
-import os
+def get_minions_log(minions, config: LSTConfig):
+    result = []
+    for i, minion in enumerate(minions):
+        minion_strings = []
+        if config.log_attack_add:
+            minion_strings.append(minion.attack_change)
+        if config.log_attack_full:
+            minion_strings.append(minion.current_attack)
+        if config.log_attack_base:
+            minion_strings.append(minion.attack)
+        if config.log_health:
+            minion_strings.append(minion.health)
+        if config.log_mana:
+            minion_strings.append(minion.mana)
+        if config.log_minion_id:
+            minion_strings.append(minion.card_id)
+        result.append(minion_strings)
+    return list(zip(*result))
 
-if platform.system() == 'Windows':
-    clear = lambda: os.system('cls')
-else:
-    clear = lambda: os.system('clear')
+
+def combine_minions(minion_strings, config: LSTConfig):
+    return config.log_type_seperator.join(
+        [config.log_array_separator.join(map(str, minions)) for minions in minion_strings]
+    )
 
 
-def read_log_file(filename: str):
+def log_game(header, game: Game, logger, config: LSTConfig):
+    opponent_strings = get_minions_log(game.opponents_board, config)
+    player_strings = get_minions_log(game.players_board, config)
+    logger.info(header)
+    logger.info(combine_minions(opponent_strings, config))
+    logger.info(combine_minions(player_strings, config))
+
+
+def read_log_file(filename: str, logger, config):
     logger.info(f"Logfile {filename}")
     list_num = 0
     list_offset = 0
@@ -133,12 +100,9 @@ def read_log_file(filename: str):
 
     last_game = None
     last_game_hash = ''
-    # initial_map = {}
-    # first_game = -1
 
-    for line_n in follow(open(filename, 'r')):
+    for line_n in follow_file(open(filename, 'r')):
         line = line_n[:-1]
-        # print(line)
         date, type, message = extract_message(line)
         if type == 'list-start':
             if message >= list_num:
@@ -169,62 +133,24 @@ def read_log_file(filename: str):
                             continue
                 only_minions_list.sort(key=atr('sort_key'))
                 current_game = Game(only_minions_list, [])
-                # if list_offset > first_game and current_game.lst_complete:
-                #    first_game = list_offset
-                #    initial_map = {}
-                #    for i, opp in enumerate(current_game.opponents_board):
-                #        initial_map[opp.attack_change] = i + 1
-                #    for j, pl in enumerate(current_game.players_board):
-                #        initial_map[pl.attack_change] = j + 1 + 7
-
-                # print(current_game)
             except:
                 pass
+
         if current_game is not None and last_game_hash != current_game.hash_lst and current_game.lst_complete:
-            clear()
+            clear_console()
             last_game = current_game
             last_game_hash = last_game.hash_lst
-            print_last = print_game(last_game, True, False)
-            print_json = print_game(last_game, False, True)
-            print(f"Game: {list_offset // 100000 + 1} Turn: {list_num - 2}")
-            print(print_last)
-            print(print_json)
-
-            logger.info(f"Game: {list_offset // 100000 + 1} Turn: {list_num - 2}")
-            logger.info(print_last)
-
-            #TODO: Add the minions in this too.
-            data = {
-                "Game": list_offset // 100000 + 1,
-                "Turn": list_num - 2,
-                "board": print_game(last_game, True, True)
-            }
-
-            url = 'http://155.138.193.23/upload'
-            response = requests.post(url, json=data)
-
-            #logger.info(f"Game: {list_offset // 100000 + 1}, Turn: {list_num - 2}")
-            #logger.info(print_game(last_game, True, False))
+            header = f"Game: {list_offset // 100000 + 1} Turn: {list_num - 2}"
+            print_game(header, last_game, config)
+            log_game(header, last_game, logger, config)
         minions = dict(filter(my_filtering_function, minions.items()))
     return minions
 
 
-if os.path.exists("config.txt"):
-    with open('config.txt', 'r') as file:
-        WIN_LOG_PATH = file.read()
-else:
-    WIN_LOG_PATH = 'C:\\Program Files (x86)\\Hearthstone\\Logs\\'
-if os.path.exists("config.txt"):
-    with open('config.txt', 'r') as file:
-        MAC_LOG_PATH = file.read()
-else:
-    MAC_LOG_PATH = '/Applications/Hearthstone/Logs/'
-
-
 if __name__ == '__main__':
-    debug = False
-    if not debug:
-        base_path = WIN_LOG_PATH if platform.system() == 'Windows' else MAC_LOG_PATH
+    try:
+        config = read_config()
+        print(config.to_print())
         if not hs_running():
             print('Waiting for Hearthstone to start')
             hs_started = False
@@ -235,17 +161,23 @@ if __name__ == '__main__':
             time.sleep(20)
         else:
             time.sleep(5)
-        log_folders = list(os.listdir(base_path))
+        log_folders = [folder for folder in os.listdir(config.hs_logs_path) if 'Hearthstone_' in folder]
         log_folders.sort()
         current_log_folder = log_folders[-1]
+        log_date = current_log_folder.replace('Hearthstone_', '')
         zone_exists = False
-        log_path = os.path.join(base_path, current_log_folder, 'Zone.log')
+        log_path = os.path.join(config.hs_logs_path, current_log_folder, 'Zone.log')
         print(f"Current log path: {current_log_folder}")
+        logging.basicConfig(filename=f'lst_{log_date}.log', filemode='w', format='%(message)s')
+        logger = logging.getLogger()
+        logger.setLevel(logging.DEBUG)
         while not zone_exists:
             if os.path.exists(log_path):
                 zone_exists = True
             time.sleep(1)
         print(f"Zone.log exists, starting reading")
-        read_log_file(log_path)
-    else:
-        read_log_file('Zone.log')
+        read_log_file(log_path, logger, config)
+    except Exception as e:
+        traceback.print_exc()
+        with open("lst_helper_crash.txt", "w") as crashLog:
+            crashLog.write(traceback.format_exc())

@@ -1,6 +1,6 @@
 from collections import defaultdict
 
-from lehmer_db import lehmer_db_csv
+from lehmer_db import lehmer_db_csv, lehmer_db_smn
 from parse_lst import read_all_games
 from test import lehmer_code
 
@@ -122,17 +122,45 @@ def lehmer_code_calc(games):
     with open(f'analysis/lehmer.txt', 'w') as w:
         for l, a, m in final:
             if l in seen_codes:
-                print("pooooog", l, a, m)
+                print("pooooog1", l, a, m)
             else:
                 seen_codes.add(l)
             if lehmer_db_csv.seen(l) is not None:
-                print("pooooog", l, a, m)
+                print("pooooog2", l, a, m)
+            if lehmer_db_smn.seen(l) is not None:
+                print("pooooog3", l, a, m)
             w.write(f"{l};{a};{m}\n")
 
+def compare_boards(g1, g2):
+    a1 = g1.attack_add
+    a2 = g2.attack_add
+    similar = [0] * 14
+    for i in range(14):
+        similar[i] = 1 if a1[i] == a2[i] else 0
+    return similar
 
 if __name__ == '__main__':
     runs = read_all_games(
-        "G:\\.shortcut-targets-by-id\\1CFpsGpqz65IlXdBeou1MB5lTdJbYxjv1\\Long Strange Trip runs\\Leftmost Attack Runs"
+        "G:\\.shortcut-targets-by-id\\1CFpsGpqz65IlXdBeou1MB5lTdJbYxjv1\\Long Strange Trip runs\\Leftmost Attack Runs",
+        []
     )
     lehmer_code_calc(runs.all_games)
     print(f"Total turns: {len(runs.all_games)}")
+
+    counts = defaultdict(int)
+    for run in runs.runs:
+        print(len(run.games))
+        prev = None
+        for game in run.games:
+            if prev is None:
+                prev = game
+            else:
+                similar = compare_boards(prev, game)
+                prev = game
+                counts[','.join(map(str, similar))] += 1
+    counts = sort_value(counts)
+    totals = defaultdict(int)
+    for k, v in counts.items():
+        totals[k.count('1')] += v
+    totals = sort_value(totals)
+    print(totals)

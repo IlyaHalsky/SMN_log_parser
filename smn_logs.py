@@ -1,16 +1,13 @@
-import json
 import platform
 import re
-import shutil
-import sys
 from dataclasses import dataclass
 from itertools import groupby
 from typing import Optional
 
-import requests
 from hearthstone.enums import CardSet
 
 from card_sets import set_names
+from minions_utils import minions_by_id, minions_by_name, minions_by_dbfId
 
 TIMESTAMP_RE = re.compile(r"^([DWE]) ([\d:.]+) (.+)$")
 MESSAGE_RE = re.compile(r"^(.*) - (.*)$")
@@ -36,21 +33,6 @@ def extract_message(log_line):
 
 
 import os
-
-
-def resource_path(relative_path):
-    try:
-        base_path = sys._MEIPASS
-    except Exception:
-        base_path = os.path.abspath(".")
-
-    return os.path.join(base_path, relative_path)
-
-
-minions_json = json.load(open(resource_path('cards.collectible.json'), encoding="utf8"))
-minions_by_id = {card['id']: card for card in minions_json if card['type'] == 'MINION'}
-minions_by_name = {card['name']: card for card in minions_json if card['type'] == 'MINION'}
-minions_by_dbfId = {str(card['dbfId']): card for card in minions_json if card['type'] == 'MINION'}
 
 
 def parse_minion(date, filename, log, minions, list_offset):

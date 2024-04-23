@@ -22,11 +22,17 @@ class Runs:
         self.all_games = [game for run in self.runs for game in run.games]
 
 
-def read_all_games(logs_path):
+def read_all_games(logs_path, log_names=None):
+    if log_names is None:
+        log_names = []
     runs = []
     for log_file in tqdm(os.listdir(logs_path)):
         log_path = os.path.join(logs_path, log_file)
         if os.path.isdir(log_path):
+            continue
+        if log_file not in log_names and len(log_names) != 0:
+            continue
+        if not log_file.endswith('.log'):
             continue
         minions = read_log_file(log_path)
 
