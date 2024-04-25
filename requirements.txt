@@ -4,3 +4,4 @@ psutil
 tabulate
 numpy
 termcolor
+tqdm
