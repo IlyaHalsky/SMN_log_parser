@@ -1,20 +1,17 @@
 import json
-import os
-import sys
-from collections import defaultdict
 
+from helper_utils import download_card_data
 
-def resource_path(relative_path):
-    try:
-        base_path = sys._MEIPASS
-    except Exception:
-        base_path = os.path.abspath(".")
+minions_by_id = {}
+minions_by_name = {}
+minions_by_dbfId = {}
 
-    return os.path.join(base_path, relative_path)
+def init_minions():
+    global minions_by_id, minions_by_name, minions_by_dbfId
+    download_card_data()
+    minions_json = json.load(open('./helper_data/cards.collectible.json', encoding='utf-8'))
+    minions_by_id = {card['id']: card for card in minions_json if card['type'] == 'MINION'}
+    minions_by_name = {card['name']: card for card in minions_json if card['type'] == 'MINION'}
+    minions_by_dbfId = {str(card['dbfId']): card for card in minions_json if card['type'] == 'MINION'}
 
-
-minions_json = json.load(open(resource_path('cards.collectible.json'), encoding="utf8"))
-minions_by_id = {card['id']: card for card in minions_json if card['type'] == 'MINION'}
-minions_by_name = {card['name']: card for card in minions_json if card['type'] == 'MINION'}
-minions_by_dbfId = {str(card['dbfId']): card for card in minions_json if card['type'] == 'MINION'}
-
+init_minions()

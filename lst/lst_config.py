@@ -77,7 +77,7 @@ def generate_default_config():
     return config
 
 
-LST_CONFIG_PATH = 'lst_helper_config.txt'
+LST_CONFIG_PATH = './helper_data/lst_helper_config.txt'
 
 
 def init_config():

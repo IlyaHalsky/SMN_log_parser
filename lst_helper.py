@@ -1,6 +1,5 @@
 import logging
 import os
-import sys
 import time
 import traceback
 from itertools import groupby
@@ -76,8 +75,10 @@ def combine_minions(minion_strings, config: LSTConfig):
         [config.log_array_separator.join(map(str, minions)) for minions in minion_strings]
     )
 
+
 def get_attack_log(game: Game, config: LSTConfig):
     return f"{game.attacker.attack_change}{config.log_array_separator}{game.defender.attack_change}"
+
 
 def log_game(header, game: Game, logger, config: LSTConfig):
     opponent_strings = get_minions_log(game.opponents_board, config)

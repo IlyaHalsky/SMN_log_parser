@@ -5,6 +5,8 @@ from typing import Iterator
 
 import psutil
 
+from download_card_defs import download_collectable
+
 
 def hs_running():
     for pid in psutil.pids():
@@ -37,3 +39,9 @@ def follow_file(file, sleep_sec=0.1) -> Iterator[str]:
         else:
             break
     yield ''
+
+def download_card_data():
+    if not os.path.exists("./helper_data"):
+        os.mkdir("./helper_data")
+    if not os.path.exists("./helper_data/cards.collectible.json"):
+        download_collectable("./helper_data")

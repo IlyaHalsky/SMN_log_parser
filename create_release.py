@@ -18,17 +18,13 @@ import PyInstaller.__main__
 # ])
 if platform.system() == 'Windows':
     filename = '-n lst_helper.exe'
-    arch = []
 else:
     filename = '-n lst_helper.mac'
-    arch = []
 PyInstaller.__main__.run(
     [
         'lst_helper.py',
         '--onefile',
-        '--add-data', "./cards.collectible.json:.",
-        filename,
-        *arch
+        filename
     ]
 )
 
@@ -39,6 +35,5 @@ else:
 PyInstaller.__main__.run([
     'lst_power_parser.py',
     '--onefile',
-    '--add-data', "./cards.collectible.json:.",
     filename
 ])
