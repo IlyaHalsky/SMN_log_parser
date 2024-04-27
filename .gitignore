@@ -1,6 +1,9 @@
 *.json
 *.log
 *.txt
+dist
+build
+*.spec
 
 image_cache
 .idea/**/workspace.xml
