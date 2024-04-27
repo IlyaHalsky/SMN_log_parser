@@ -120,8 +120,6 @@ class Game:
     def __post_init__(self):
         self.attacker = None
         self.defender = None
-        self.correct = ['  0'] * len(self.spells)
-        self.position = [' -1'] * len(self.spells)
         self.used = []
         self.left_out = []
         self.minions.sort(key=atr('sort_key'))
@@ -130,8 +128,6 @@ class Game:
             solved = False
             for j, minion in enumerate(self.minions):
                 if spell.card_id == minion.card_id:
-                    self.correct[i] = '  ' + str(1)
-                    self.position[i] = str(j).rjust(3)
                     self.used.append(minion)
                     solved = True
                     break

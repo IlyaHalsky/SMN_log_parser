@@ -157,7 +157,7 @@ def solution(opponent, player):
 if __name__ == '__main__':
     runs = read_all_games(
         "G:\\.shortcut-targets-by-id\\1CFpsGpqz65IlXdBeou1MB5lTdJbYxjv1\\Long Strange Trip runs\\Leftmost Attack Runs",
-        ['Halsky1.log', 'Halsky2.log', 'Halsky3.log', 'Halsky4.log', 'Halsky5.log', 'Halsky6.log', 'Halsky7.log'],
+        [],
     )
     lehmer_code_calc(runs.all_games)
     print(f"Total turns: {len(runs.all_games)}")
