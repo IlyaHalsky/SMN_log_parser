@@ -301,12 +301,13 @@ def compare_same(b1, b2):
     return count
 
 def sticky_by_run(boards):
-    with open(f'csv_dump/sticky_by_run.txt', 'w', encoding='utf-8') as w:
+    tpe = boards[0].game_type
+    with open(f'csv_dump/sticky_by_run_{tpe}.txt', 'w', encoding='utf-8') as w:
         counts = defaultdict(int)
         run_length = []
         for key, abbb in groupby(boards, lambda board: board.game_key):
             abb = list(abbb)
-            if len(list(abb)) > 100:
+            if len(list(abb)) > 10:
                 run_length.append(len(list(abb)))
                 abb.sort(key=lambda b: b.start_id)
                 last = None
@@ -358,6 +359,7 @@ if __name__ == '__main__':
     distributions_by_run(one_to_one)
     pairs_of_total_attack(boards)
     sticky_by_run(one_to_one)
+    sticky_by_run(reset)
 
     # attack repeats with made attack
     seen_attack = defaultdict(list)

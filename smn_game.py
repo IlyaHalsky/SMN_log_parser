@@ -150,5 +150,9 @@ class Game:
         return [m.attack_change for m in self.minions]
 
     @property
+    def attack_total(self):
+        return [m.current_attack for m in self.minions]
+
+    @property
     def minion_names(self):
         return [m.card_id for m in self.minions]

@@ -10,11 +10,11 @@ from tabulate import tabulate, SEPARATING_LINE
 from helper_utils import clear_console, hs_running, follow_file
 from lst.lst_config import read_config, LSTConfig
 from smn_game import Game
-from smn_logs import extract_message, parse_minion, RESTART_OFFSET
+from smn_logs import extract_message, parse_minion, RESTART_OFFSET, Minion
 from utils import yellow, red, cyan
 
 
-def get_minions_string(minions, config: LSTConfig):
+def get_minions_string(minions: [Minion], config: LSTConfig):
     result = []
     for i, minion in enumerate(minions):
         minion_strings = []
@@ -30,6 +30,8 @@ def get_minions_string(minions, config: LSTConfig):
             minion_strings.append(cyan(minion.mana))
         if config.show_minion_name:
             minion_strings.append(minion.name)
+        if config.show_set:
+            minion_strings.append(minion.expansion)
         result.append(' '.join(map(str, minion_strings)))
     return result
 
@@ -66,6 +68,8 @@ def get_minions_log(minions, config: LSTConfig):
             minion_strings.append(minion.mana)
         if config.log_minion_id:
             minion_strings.append(minion.card_id)
+        if config.log_set:
+            minion_strings.append(minion.expansion_raw)
         result.append(minion_strings)
     return list(zip(*result))
 

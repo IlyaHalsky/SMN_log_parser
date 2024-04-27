@@ -168,6 +168,14 @@ class Minion:
             set = minions_by_name[self.name]['set']
         return set_names[CardSet[set]]
 
+    @property
+    def expansion_raw(self):
+        if len(self.json) > 0:
+            set = self.json['set']
+        else:
+            set = minions_by_name[self.name]['set']
+        return set
+
     # @property
     # def en_image(self):
     #    url = f"https://art.hearthstonejson.com/v1/render/latest/enUS/256x/{self.card_id}.png"

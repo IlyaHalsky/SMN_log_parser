@@ -139,28 +139,31 @@ def compare_boards(g1, g2):
         similar[i] = 1 if a1[i] == a2[i] else 0
     return similar
 
+def solution(opponent, player):
+    o_s = sum(opponent)
+    p_s = sum(player)
+    best_diff = abs(o_s - p_s)
+    best_move = [-1,-1, -1, -1, -1, -1]
+    for i, o in enumerate(opponent):
+        for j, p in enumerate(player):
+            o_n = o_s - o + p
+            p_n = p_s - p + o
+            diff = abs(o_n - p_n)
+            if diff <= best_diff:
+                best_move = [p, o, j + 1, i + 1, p_n, o_n]
+                best_diff = diff
+    return best_move, best_diff
+
 if __name__ == '__main__':
     runs = read_all_games(
         "G:\\.shortcut-targets-by-id\\1CFpsGpqz65IlXdBeou1MB5lTdJbYxjv1\\Long Strange Trip runs\\Leftmost Attack Runs",
-        []
+        ['Halsky1.log', 'Halsky2.log', 'Halsky3.log', 'Halsky4.log', 'Halsky5.log', 'Halsky6.log', 'Halsky7.log'],
     )
     lehmer_code_calc(runs.all_games)
     print(f"Total turns: {len(runs.all_games)}")
-
-    counts = defaultdict(int)
-    for run in runs.runs:
-        print(len(run.games))
-        prev = None
-        for game in run.games:
-            if prev is None:
-                prev = game
-            else:
-                similar = compare_boards(prev, game)
-                prev = game
-                counts[','.join(map(str, similar))] += 1
-    counts = sort_value(counts)
-    totals = defaultdict(int)
-    for k, v in counts.items():
-        totals[k.count('1')] += v
-    totals = sort_value(totals)
-    print(totals)
+    before_diffs = defaultdict(int)
+    for game in runs.all_games:
+        _, best = solution(game.attack_total[:7], game.attack_total[7:])
+        before_diffs[best] += 1
+    before_diffs = sort_key(before_diffs)
+    print(before_diffs)

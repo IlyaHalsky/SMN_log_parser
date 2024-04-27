@@ -24,6 +24,7 @@ class LSTConfig:
         self.show_health = int(self.config['display']['health']) == 1
         self.show_mana = int(self.config['display']['mana']) == 1
         self.show_minion_name = int(self.config['display']['minion_name']) == 1
+        self.show_set = int(self.config['display']['set']) == 1
 
         self.log_array_separator = parse_separator(self.config['logging']['array_separator'])
         self.log_type_seperator = parse_separator(self.config['logging']['type_separator'])
@@ -33,6 +34,7 @@ class LSTConfig:
         self.log_health = int(self.config['logging']['health']) == 1
         self.log_mana = int(self.config['logging']['mana']) == 1
         self.log_minion_id = int(self.config['logging']['minion_id']) == 1
+        self.log_set = int(self.config['logging']['set']) == 1
 
     def to_print(self):
         return json.dumps(
@@ -53,6 +55,7 @@ def generate_default_config():
         'health': '0',
         'mana': '0',
         'minion_name': '0',
+        'set': '0',
     }
 
     config['logging'] = {
@@ -64,6 +67,7 @@ def generate_default_config():
         'health': '0',
         'mana': '0',
         'minion_id': '0',
+        'set': '0',
     }
 
     # config['highlight'] = {
@@ -84,10 +88,28 @@ def init_config():
     with open(LST_CONFIG_PATH, 'w') as file:
         generate_default_config().write(file)
 
+def merge_configs():
+    config = ConfigParser()
+    config.read(LST_CONFIG_PATH)
+    default = generate_default_config()
+    for section in default.sections():
+        if config.has_section(section):
+            for option in default.options(section):
+                if not config.has_option(section, option):
+                    config.set(section, option, default[section][option])
+        else:
+            config.add_section(section)
+            for key, value in default.items(section):
+                config.set(section, key, value)
+    with open(LST_CONFIG_PATH, 'w') as file:
+        config.write(file)
+
 
 def read_config():
     if not os.path.exists(LST_CONFIG_PATH):
         init_config()
+    else:
+        merge_configs()
     config = ConfigParser()
     config.read(LST_CONFIG_PATH)
     return LSTConfig(config)
