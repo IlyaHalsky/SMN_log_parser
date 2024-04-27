@@ -4,6 +4,7 @@
 dist
 build
 *.spec
+.idea
 
 image_cache
 .idea/**/workspace.xml
