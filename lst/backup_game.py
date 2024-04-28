@@ -34,6 +34,13 @@ def backup_run(run):
     return run_array
 
 
+CORRECT_SET = set(range(1, 15))
+
+
+def assert_lst_correct_game(game):
+    assert len(CORRECT_SET & set(game.attack_add)) == 14, f"{game.attack_add}, {game.log_name}, {game}"
+
+
 def save_run(filename: str, run):
     run_array = backup_run(run)
     with open(filename, 'w') as f:

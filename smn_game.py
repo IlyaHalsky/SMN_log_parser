@@ -23,6 +23,10 @@ class Game:
         return next(minion for minion in self.minions if minion.id == minion_id)
 
     @property
+    def log_name(self):
+        return self.minions[0].log_name
+
+    @property
     def list_id(self):
         return self.minions[0].list_id
 

@@ -195,6 +195,33 @@ def count_tags(runs: Runs):
     tags_count = sort_value(tags_count)
     print(tags_count)
 
+def decode_game(decode_dict, game):
+    result = []
+    for value in game.attack_add:
+        result.append(decode_dict[value])
+    return result
+
+def lehmer_code_calc_decoded(runs):
+    final = []
+    for session in runs.all_sessions:
+        first_game = session.games[0]
+        decode_dict = {}
+        for i, value in enumerate(first_game.attack_add):
+            decode_dict[value] = i + 1
+        for game in session.games:
+            if game != first_game:
+                decoded = decode_game(decode_dict, game)
+                final.append((lehmer_code(decoded), decoded, game.minion_names))
+    final.sort(key=lambda item: item[0])
+    seen_codes = set()
+    with open(f'analysis/lehmer_decoded.txt', 'w') as w:
+        for l, a, m in final:
+            if l in seen_codes:
+                print("pooooog1", l, a, m)
+            else:
+                seen_codes.add(l)
+            w.write(f"{l};{a};{m}\n")
+
 
 if __name__ == '__main__':
     runs = read_all_games(
@@ -205,3 +232,4 @@ if __name__ == '__main__':
     print(f"Total turns: {len(runs.all_games)}")
     #together_counts(runs)
     sticky_distributions(runs)
+    lehmer_code_calc_decoded(runs)

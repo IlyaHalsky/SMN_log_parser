@@ -5,7 +5,7 @@ from itertools import groupby
 
 from tqdm import tqdm
 
-from lst.backup_game import save_run
+from lst.backup_game import save_run, assert_lst_correct_game
 from lst.restore_from_backup import restore_from_backup
 from smn_game import Game
 from smn_logs import read_log_file
@@ -107,7 +107,7 @@ def read_all_games(logs_path, log_names=None):
 
                 only_minions_list.sort(key=atr('sort_key'))
                 game = Game(only_minions_list, [])
-                assert len(set(game.attack_add)) == 14, str(game.attack_add) + log_file + str(game)
+                assert_lst_correct_game(game)
                 if not game.lst_complete:
                     continue
                 current_games.append(game)

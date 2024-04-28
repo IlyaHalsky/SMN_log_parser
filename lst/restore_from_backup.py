@@ -1,5 +1,7 @@
+import copy
 import json
 
+from lst.backup_game import assert_lst_correct_game
 from minions_utils import minions_by_id
 from smn_game import Game
 from smn_logs import Minion
@@ -7,7 +9,7 @@ from smn_logs import Minion
 
 def restore_minion(backup_name, board_id, minion_num, minion_dict) -> Minion:
     minion_id = minion_dict['card_id']
-    minion_json = minions_by_id[minion_id]
+    minion_json = copy.deepcopy(minions_by_id[minion_id])
     tags = []
     if minion_num < 7:
         tags.append(('CONTROLLER', '2 '))
@@ -50,7 +52,7 @@ def restore_from_backup(backup_path) -> [Game]:
             line = line.strip()
             games.append(restore_game(backup_name, json.loads(line)))
     for game in games:
-        assert len(set(game.attack_add)) == 14, f"{backup_path}, {game.attack_add}, {game}"
+        assert_lst_correct_game(game)
     return games
 
 
@@ -58,5 +60,5 @@ if __name__ == '__main__':
     path = "G:\\.shortcut-targets-by-id\\1CFpsGpqz65IlXdBeou1MB5lTdJbYxjv1\\Long Strange Trip runs\\Leftmost Attack Runs\\backup\\Halsky1.bkp"
     games = restore_from_backup(path)
     for game in games:
-        assert len(set(game.attack_add)) == 14, f"{game.attack_add} {game}"
-        print(game)
+        assert_lst_correct_game(game)
+        print(game.attack_add)
