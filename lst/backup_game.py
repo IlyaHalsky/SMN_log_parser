@@ -20,7 +20,11 @@ def backup_game(game: Game):
     game_array = []
     for minion in game.minions:
         game_array.append(backup_minion(minion))
-    return game_array
+    return {
+        "game_id": game.game_id,
+        "game_offset": game.game_offset,
+        "minions": game_array
+    }
 
 
 def backup_run(run):

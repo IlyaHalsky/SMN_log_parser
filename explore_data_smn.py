@@ -11,8 +11,8 @@ from card_sets import set_names
 from lehmer_db import lehmer_db_csv
 from smn_game import Game
 from smn_logs import read_log_file
-from minions_utils import minions_json, minions_by_id
-from test import lehmer_code
+from minions_utils import minions_by_id
+from lehmer_code import lehmer_code
 from visualize import create_board_image
 
 def sanitize_filename(filename):

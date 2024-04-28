@@ -7,7 +7,7 @@ import numpy as np
 from tqdm import tqdm
 
 from minions_utils import minions_by_id
-from test import lehmer_code
+from lehmer_code import lehmer_code
 
 
 # download from https://athena.hearthmod.com/apollo/mysterious

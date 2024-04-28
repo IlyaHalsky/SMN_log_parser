@@ -1,16 +1,16 @@
 from collections import defaultdict
 
+from lehmer_code import lehmer_code
 from lehmer_db import lehmer_db_csv, lehmer_db_smn
-from parse_lst import read_all_games
-from test import lehmer_code
+from parse_lst import read_all_games, Runs
 
 
 def sort_key(input):
     return dict(sorted(input.items(), key=lambda item: item[0]))
 
 
-def sort_value(input):
-    return dict(sorted(input.items(), key=lambda item: item[1]))
+def sort_value(input, reversed=False):
+    return dict(sorted(input.items(), key=lambda item: item[1], reverse=reversed))
 
 
 def minion_distributions(file_name, games):
@@ -131,6 +131,7 @@ def lehmer_code_calc(games):
                 print("pooooog3", l, a, m)
             w.write(f"{l};{a};{m}\n")
 
+
 def compare_boards(g1, g2):
     a1 = g1.attack_add
     a2 = g2.attack_add
@@ -139,11 +140,12 @@ def compare_boards(g1, g2):
         similar[i] = 1 if a1[i] == a2[i] else 0
     return similar
 
+
 def solution(opponent, player):
     o_s = sum(opponent)
     p_s = sum(player)
     best_diff = abs(o_s - p_s)
-    best_move = [-1,-1, -1, -1, -1, -1]
+    best_move = [-1, -1, -1, -1, -1, -1]
     for i, o in enumerate(opponent):
         for j, p in enumerate(player):
             o_n = o_s - o + p
@@ -154,6 +156,46 @@ def solution(opponent, player):
                 best_diff = diff
     return best_move, best_diff
 
+
+def together_counts(runs: Runs):
+    together = defaultdict(lambda: defaultdict(int))
+    for game in runs.all_games:
+        minion_ids = [m.card_id for m in game.minions]
+        for minion in minion_ids:
+            for other in minion_ids:
+                if minion != other:
+                    together[minion][other] += 1
+    together = sort_key(together)
+    with open('analysis/together.txt', 'w') as w:
+        for key, value in together.items():
+            value = sort_value(value, reversed=True)
+            w.write('{},{}\n'.format(key, value))
+
+
+def sticky_distributions(runs: Runs):
+    counts = defaultdict(int)
+    for run in runs.all_sessions:
+        curr = None
+        for game in run.games:
+            if curr is None:
+                curr = game
+            else:
+                counts[compare_games(curr, game)] += 1
+                curr = game
+    counts = sort_value(counts)
+    print(counts)
+
+
+def count_tags(runs: Runs):
+    tags_count = defaultdict(int)
+    for game in runs.all_games:
+        for minion in game.minions:
+            for tag, _ in minion.tags:
+                tags_count[tag] += 1
+    tags_count = sort_value(tags_count)
+    print(tags_count)
+
+
 if __name__ == '__main__':
     runs = read_all_games(
         "G:\\.shortcut-targets-by-id\\1CFpsGpqz65IlXdBeou1MB5lTdJbYxjv1\\Long Strange Trip runs\\Leftmost Attack Runs",
@@ -161,9 +203,5 @@ if __name__ == '__main__':
     )
     lehmer_code_calc(runs.all_games)
     print(f"Total turns: {len(runs.all_games)}")
-    before_diffs = defaultdict(int)
-    for game in runs.all_games:
-        _, best = solution(game.attack_total[:7], game.attack_total[7:])
-        before_diffs[best] += 1
-    before_diffs = sort_key(before_diffs)
-    print(before_diffs)
+    #together_counts(runs)
+    sticky_distributions(runs)

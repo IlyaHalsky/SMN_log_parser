@@ -22,7 +22,7 @@ def restore_minion(backup_name, board_id, minion_num, minion_dict) -> Minion:
         backup_name,
         "unknown_date",
         board_id,
-        board_id + minion_num,
+        board_id * 100 + minion_num,
         minion_dict['card_id'],
         minion_json['name'],
         [('RESTORED', '1'), *tags],
@@ -32,10 +32,12 @@ def restore_minion(backup_name, board_id, minion_num, minion_dict) -> Minion:
     return minion
 
 
-def restore_game(backup_name, board_id, game_dict) -> Game:
+def restore_game(backup_name, game_dict) -> Game:
+    minions_array = game_dict['minions']
+    game_id = game_dict['game_id']
     minions = []
-    for i, minion_dict in enumerate(game_dict):
-        minions.append(restore_minion(backup_name, board_id, i, minion_dict))
+    for i, minion_dict in enumerate(minions_array):
+        minions.append(restore_minion(backup_name, game_id, i, minion_dict))
     return Game(minions, [])
 
 
@@ -44,11 +46,11 @@ def restore_from_backup(backup_path) -> [Game]:
     with open(backup_path, 'r') as f:
         backup_name = backup_path.split('/')[-1]
         lines = f.readlines()
-        for i, line in enumerate(lines):
+        for line in lines:
             line = line.strip()
-            games.append(restore_game(backup_name, i, json.loads(line)))
+            games.append(restore_game(backup_name, json.loads(line)))
     for game in games:
-        assert len(set(game.attack_add)) == 14
+        assert len(set(game.attack_add)) == 14, f"{backup_path}, {game.attack_add}, {game}"
     return games
 
 

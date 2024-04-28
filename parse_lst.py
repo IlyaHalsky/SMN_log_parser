@@ -16,6 +16,20 @@ class Run:
     full_path: str
     log_name: str
     games: [Game]
+    original: bool = True
+
+    def __post_init__(self):
+        if self.original:
+            self.sessions = []
+            current_offset = 0
+            current_games = []
+            for game in self.games:
+                if current_offset != game.game_offset:
+                    current_offset = game.game_offset
+                    self.sessions.append(Run(self.full_path, self.log_name, current_games, False))
+                    current_games = []
+                current_games.append(game)
+            self.sessions.append(Run(self.full_path, self.log_name, current_games, False))
 
     @property
     def last_offset_games(self) -> [Game]:
@@ -33,8 +47,13 @@ class Run:
 class Runs:
     runs: [Run]
 
-    def __post_init__(self):
-        self.all_games = [game for run in self.runs for game in run.games]
+    @property
+    def all_games(self) -> [Game]:
+        return [game for run in self.runs for game in run.games]
+
+    @property
+    def all_sessions(self) -> [Run]:
+        return [session for run in self.runs for session in run.sessions]
 
 
 def find_backup(logs_path, log_file):
@@ -94,8 +113,9 @@ def read_all_games(logs_path, log_names=None):
                 current_games.append(game)
             run = Run(log_path, log_file, current_games)
 
-            backup_name = run.log_name
-            save_path = logs_path + "\\" + "backup\\" + backup_name.replace(".log", "") + ".bkp"
-            save_run(save_path, run)
+            if find_backup(logs_path, log_file) is None:
+                backup_name = run.log_name
+                save_path = logs_path + "\\" + "backup\\" + backup_name.replace(".log", "") + ".bkp"
+                save_run(save_path, run)
             runs.append(run)
     return Runs(runs)
