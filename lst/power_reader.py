@@ -61,7 +61,7 @@ def read_power_entities(filename):
             line = line.strip()
             entity = FULL_ENTITY_REGEX.match(line)
             if entity:
-                new_entity = PowerEntity(int(entity.group(1)), entity.group(2), [])
+                new_entity = PowerEntity(int(entity.group(1)), entity.group(2).replace('SCH_199t', 'SCH_199'), [])
                 current_entity_id = new_entity.entity_id
                 entities[current_entity_id] = new_entity
             if current_entity_id is not None:

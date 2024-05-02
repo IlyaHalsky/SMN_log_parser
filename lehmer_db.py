@@ -1,6 +1,5 @@
 import random
 from collections import defaultdict
-import matplotlib.pyplot as plt
 
 
 class LehmerDB:
@@ -34,10 +33,10 @@ if __name__ == '__main__':
         buckets[int(code / bucket_size)] += 1
     #for code in lehmer_db_lst.codes:
     #    buckets[int(code / bucket_size)] += 1
-    buckets = dict(sorted(buckets.items(), key=lambda item: item[0]))
-    plt.figure(figsize=(50, 20))
-    plt.bar(list(buckets.keys()), buckets.values(), color='g')
-    plt.show()
+    #buckets = dict(sorted(buckets.items(), key=lambda item: item[0]))
+    #plt.figure(figsize=(50, 20))
+    #plt.bar(list(buckets.keys()), buckets.values(), color='g')
+    #plt.show()
     #print(len(lehmer_db_csv.codes) + len(lehmer_db_lst.codes))
     #for k, v in buckets.items():
     #    print(k, v)

@@ -2,7 +2,9 @@ from collections import defaultdict
 
 from lehmer_code import lehmer_code
 from lehmer_db import lehmer_db_csv, lehmer_db_smn
+from minions_utils import minions_by_id
 from parse_lst import read_all_games, Runs
+from utils import yellow
 
 
 def sort_key(input):
@@ -174,7 +176,9 @@ def together_counts(runs: Runs):
 
 def sticky_distributions(runs: Runs):
     counts = defaultdict(int)
+    length = []
     for run in runs.all_sessions:
+        length.append(len(run.games))
         curr = None
         for game in run.games:
             if curr is None:
@@ -184,6 +188,7 @@ def sticky_distributions(runs: Runs):
                 curr = game
     counts = sort_value(counts)
     print(counts)
+    print(length)
 
 
 def count_tags(runs: Runs):
@@ -222,6 +227,86 @@ def lehmer_code_calc_decoded(runs):
                 seen_codes.add(l)
             w.write(f"{l};{a};{m}\n")
 
+def first_board_counts(runs):
+    for session in runs.all_sessions:
+        counts = defaultdict(int)
+        first_minions = [m.card_id for m in session.games[0].minions]
+        for game in session.games:
+            for minion in game.minions:
+                counts[minion.card_id] += 1
+        counts = sort_value(counts, reversed=True)
+        counts = list(counts.items())
+        print(first_minions)
+        place = []
+        for minion in first_minions:
+            place.append(next(i for i,v in enumerate(counts) if v[0] == minion))
+        print(place)
+
+def first_board_yours_print(runs: Runs):
+    for session in runs.all_sessions[:5]:
+        print(session.log_name)
+        yours = session.games[0].attack_add[7:]
+        count = 0
+        for game in session.games:
+            count +=1
+            if count > 10:
+                break
+            print(count)
+            attacks = game.attack_add
+            result = ''
+            for number in attacks[:7]:
+                if number in yours:
+                    result += f"{number} "
+                else:
+                    result += f"{number} "
+            result += "\n"
+            for number in attacks[7:]:
+                if number in yours:
+                    result += f"{number} "
+                else:
+                    result += f"{number} "
+            print(result)
+
+def first_board_yours(runs: Runs):
+    repeats = defaultdict(int)
+    target = [0,1,1,0,1,1,0,0,0,1,0,1,0,1]
+    printer = []
+    for session in runs.all_sessions:
+        yours = session.games[0].attack_add[7:]
+        before = None
+        do_print = False
+        for game in session.games:
+            decoded = []
+            for minion in game.attack_add:
+                if minion in yours:
+                    decoded.append(1)
+                else:
+                    decoded.append(0)
+            if do_print:
+                printer[-1].append(decoded)
+                do_print=False
+            if decoded == target:
+                printer.append([session.log_name, before, decoded])
+                do_print = True
+            before = decoded
+            repeats[','.join(map(str, decoded))] += 1
+
+    for l, b,c,a in printer:
+        print(l, "----------")
+        print(f"{b[:7]}\n{b[7:]}\n")
+        print(f"{c[:7]}\n{c[7:]}\n")
+        print(f"{a[:7]}\n{a[7:]}")
+
+def minions(runs: Runs):
+    minions = set()
+    for game in runs.all_games:
+        for minion in game.minions:
+            minions.add(minion.card_id)
+    minions = list(minions)
+    minions.sort()
+    for m in minions:
+        print(m, minions_by_id[m]['name'])
+
 
 if __name__ == '__main__':
     runs = read_all_games(
@@ -231,5 +316,8 @@ if __name__ == '__main__':
     lehmer_code_calc(runs.all_games)
     print(f"Total turns: {len(runs.all_games)}")
     #together_counts(runs)
-    sticky_distributions(runs)
-    lehmer_code_calc_decoded(runs)
+    #sticky_distributions(runs)
+    #lehmer_code_calc_decoded(runs)
+    #first_board_counts(runs)
+    #first_board_yours(runs)
+    minions(runs)

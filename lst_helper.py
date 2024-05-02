@@ -35,10 +35,20 @@ def get_minions_string(minions: [Minion], config: LSTConfig):
         result.append(' '.join(map(str, minion_strings)))
     return result
 
+def find_opposite(game: Game):
+    opponent = game.attack_add[:7]
+    player = game.attack_add[7:]
+    for i in range(1, 8):
+        if i in player and (15 - i) in opponent:
+            return f"{i} -> {15 - i}"
+        if i in opponent and (15 - i) in player:
+            return f"{15 - i} -> {i}"
+    return ""
 
 def print_game(header: str, game: Game, config: LSTConfig):
     opponent_string = get_minions_string(game.opponents_board, config)
     player_string = get_minions_string(game.players_board, config)
+    opposite = find_opposite(game)
     print(header)
     print(
         tabulate(
@@ -50,6 +60,7 @@ def print_game(header: str, game: Game, config: LSTConfig):
             ], headers=[f"Pos. {i}" for i in range(1, 8)]
         )
     )
+    print(opposite)
 
 
 def get_minions_log(minions, config: LSTConfig):

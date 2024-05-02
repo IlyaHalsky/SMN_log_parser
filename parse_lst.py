@@ -65,7 +65,7 @@ def find_backup(logs_path, log_file):
         return None
 
 
-def read_all_games(logs_path, log_names=None):
+def read_all_games(logs_path, log_names=None, use_backup=True):
     if log_names is None:
         log_names = []
     runs = []
@@ -81,7 +81,7 @@ def read_all_games(logs_path, log_names=None):
         if not log_file.endswith('.log'):
             continue
 
-        if (backup_path := find_backup(logs_path, log_file)) is not None:
+        if use_backup and (backup_path := find_backup(logs_path, log_file)) is not None:
             current_games = restore_from_backup(backup_path)
             runs.append(Run(log_path, log_file, current_games))
         else:
@@ -113,7 +113,7 @@ def read_all_games(logs_path, log_names=None):
                 current_games.append(game)
             run = Run(log_path, log_file, current_games)
 
-            if find_backup(logs_path, log_file) is None:
+            if use_backup and find_backup(logs_path, log_file) is None:
                 backup_name = run.log_name
                 save_path = logs_path + "\\" + "backup\\" + backup_name.replace(".log", "") + ".bkp"
                 save_run(save_path, run)

@@ -35,7 +35,7 @@ if __name__ == '__main__':
         logging.basicConfig(filename=f'lst_power_{log_date}.log', filemode='w', format='%(message)s')
         logger = logging.getLogger()
         logger.setLevel(logging.DEBUG)
-        run = read_all_games(zone_path, ['Zone.log']).runs[0]
+        run = read_all_games(zone_path, ['Zone.log'], use_backup=False).all_sessions[-1]
         games = run.last_offset_games
         power_entities = read_power_entities(power_path)
         for game in tqdm(games, desc='Combining logs'):
@@ -44,7 +44,7 @@ if __name__ == '__main__':
                 entity_id = minion.id % RESTART_OFFSET
                 power_entity = power_entities[entity_id]
                 if power_entity.card_id != '':
-                    assert power_entity.card_id == minion.card_id, "Card ID mismatch"
+                    assert power_entity.card_id == minion.card_id, f"Card ID mismatch {power_entity.card_id} != {minion.card_id}, {minion}, {power_entity}"
                     if power_entity.affected_by is not None:
                         attacker = minion
                         defender = game.minion_by_id(power_entity.affected_by + game_offset)
