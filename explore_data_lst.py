@@ -452,6 +452,29 @@ def lehmer_code_calc_one_move(games):
             #    print("pooooog3", l, a, m)
             w.write(f"{l};{a};{m};{o}\n")
 
+def find_loops(attack_add):
+    used = set()
+    loops = []
+    for i, attack in enumerate(attack_add):
+        if attack not in used:
+            loop = [attack]
+            used.add(attack)
+            next_ind = attack - 1
+            while attack_add[next_ind] not in used:
+                current_value = attack_add[next_ind]
+                loop.append(current_value)
+                used.add(current_value)
+                next_ind = current_value - 1
+            loops.append(loop)
+    return len(loops)
+
+def loops_distribution(runs):
+    loops = defaultdict(int)
+    for game in runs.all_games:
+        loops[find_loops(game.attack_add)] += 1
+    loops = sort_key(loops)
+    for k, v in loops.items():
+        print(k, v / len(runs.all_games))
 
 if __name__ == '__main__':
     runs = read_all_games(
@@ -466,9 +489,10 @@ if __name__ == '__main__':
     # first_board_counts(runs)
     # first_board_yours(runs)
     # minions(runs)
-    lehmer_code_calc_with_swap(runs.all_games)
-    lehmer_code_calc_decoded(runs)
+    #lehmer_code_calc_with_swap(runs.all_games)
+    #lehmer_code_calc_decoded(runs)
     # longest_common_chain(runs)
     # longest_common_chain_opponent(runs)
     # longest_common_chain_player(runs)
-    lehmer_code_calc_one_move(runs.all_games)
+    #lehmer_code_calc_one_move(runs.all_games)
+    #loops_distribution(runs)

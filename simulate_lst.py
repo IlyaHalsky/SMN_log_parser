@@ -28,34 +28,30 @@ def sort_key(input):
 def sort_value(input):
     return dict(sorted(input.items(), key=lambda item: item[1]))
 
+def find_loops(attack_add):
+    used = set()
+    loops = []
+    for i, attack in enumerate(attack_add):
+        if attack not in used:
+            loop = [attack]
+            used.add(attack)
+            next_ind = attack - 1
+            while attack_add[next_ind] not in used:
+                current_value = attack_add[next_ind]
+                loop.append(current_value)
+                used.add(current_value)
+                next_ind = current_value - 1
+            loops.append(loop)
+    return len(loops)
 
 if __name__ == '__main__':
-    maximums = defaultdict(int)
-    one_is_more = 0
-    average = defaultdict(int)
-    sims = 1000
+    sims = 100000
+    number_of_loops = defaultdict(int)
+    boards = []
     for i in range(sims):
-        turns = [199, 249, 198, 130, 200, 198, 553, 201, 299, 809, 399, 772, 277, 468, 410, 315, 502, 329, 811, 28, 793, 488, 298, 298, 297, 298, 201, 201, 251, 251, 246, 248, 199, 201, 198, 201, 304, 149, 150, 150, 149, 200, 200, 200, 201, 201, 197]
-        repeats = defaultdict(int)
-        for turn in turns:
-            boards = []
-            for i in range(turn):
-                boards.append(get_board())
-            last = None
-            for board in boards:
-                if last is None:
-                    last = board
-                else:
-                    repeats[get_count(last, board)] += 1
-                    last = board
-        repeats = sort_value(repeats)
-        for k, v in repeats.items():
-            average[k] += v
-        if repeats[1] > repeats[0]:
-            one_is_more += 1
-        print(repeats)
-    print(one_is_more, 1000)
-    for k in average.keys():
-        average[k] = int(average[k] / sims)
-    average = sort_value(average)
-    print(average)
+        boards.append(get_board())
+    for board in boards:
+        number_of_loops[find_loops(board)] += 1
+    number_of_loops = sort_key(number_of_loops)
+    for k, v in number_of_loops.items():
+        print(k, v / sims)
