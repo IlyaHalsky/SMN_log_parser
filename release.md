@@ -1,16 +1,19 @@
 # Version 1.4
-After first run `lst_helper` or `lst_power_parser` will create file `lst_helper_config.txt`. This file contains various settings such as:
-- **hs** - allows you to change default Hearthstone logs location
+After first run `lst_helper` or `lst_power_parser` will create file `helper_data/lst_helper_config.txt`. This file contains various settings such as:
+- **hs** - allows you to change default Hearthstone logs location, for tool to read
 - **display** - settings for various types of information helper can output to console, allowed values are `1` and `0`
 - **logging** - settings for `.log` file created alongside console output, allowed values are `1` and `0` for minions' properties, any utf-8 character, `TAB` or `SPACE` for separators
+- **paint** - settings for various types of ideas supported:
+  - attack_sum_15 - helps you choose attack, sum of which is equal to 15
+  - color_cycles - highlights cycles on board in different colors
 
 Different flavours:
 - `lst_helper.exe` - Win
-- `lst_helper` - Mac
+- `lst_helper.mac` - Mac
   - After downloading, first rename it to just `lst_helper` (i.e. get rid of the `.mac`)
   - You'll need to make it runnable by executing `chmod u+x ./lst_helper` from Terminal
   - If it complains about running a file downloaded from the internet, Command-Click the file and choose Open, then say it's OK to run it
-- `lst_power_parser.exe` - Win, parses Zone logs together with Power to printout attack. Follow these steps before running:
+- `lst_power_parser.exe/lst_power_parser.mac` - Win/Mac, parses Zone logs together with Power to printout attack. Follow these steps before running:
   - Enter LST, play however you like
   - Close Hearthstone by `Alt+F4` or `Command+Q`, **this step is very important**
   - Open Hearthstone again, it should reconnect you back into the puzzle
