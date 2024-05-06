@@ -11,15 +11,18 @@ from helper_utils import clear_console, hs_running, follow_file
 from lst.lst_config import read_config, LSTConfig
 from smn_game import Game
 from smn_logs import extract_message, parse_minion, RESTART_OFFSET, Minion
-from utils import yellow, red, cyan
+from utils import yellow, red, cyan, colorize
 
 
-def get_minions_string(minions: [Minion], config: LSTConfig):
+def get_minions_string(attack_add_colors, minions: [Minion], config: LSTConfig):
     result = []
     for i, minion in enumerate(minions):
         minion_strings = []
         if config.show_attack_add:
-            minion_strings.append(minion.attack_change)
+            if minion.attack_change in attack_add_colors:
+                minion_strings.append(colorize(minion.attack_change, attack_add_colors[minion.attack_change]))
+            else:
+                minion_strings.append(minion.attack_change)
         if config.show_attack_full:
             minion_strings.append(minion.current_attack)
         if config.show_attack_base:
@@ -35,6 +38,36 @@ def get_minions_string(minions: [Minion], config: LSTConfig):
         result.append(' '.join(map(str, minion_strings)))
     return result
 
+def find_loops(game: Game):
+    attack_add = game.attack_add
+    used = set()
+    loops = []
+    for i, attack in enumerate(game.attack_add):
+        if attack not in used:
+            loop = [attack]
+            used.add(attack)
+            next_ind = attack - 1
+            while attack_add[next_ind] not in used:
+                current_value = attack_add[next_ind]
+                loop.append(current_value)
+                used.add(current_value)
+                next_ind = current_value - 1
+            loops.append(loop)
+    highlight = {}
+    for i, loop in enumerate(loops):
+        for attack in loop:
+            highlight[attack] = i
+    return highlight
+
+def get_minions_strings(game: Game, config: LSTConfig):
+    if config.paint_color_cycles:
+        attack_add_colors = find_loops(game)
+    else:
+        attack_add_colors = {}
+    opponent_string = get_minions_string(attack_add_colors, game.opponents_board, config)
+    player_string = get_minions_string(attack_add_colors, game.players_board, config)
+    return opponent_string, player_string
+
 def find_opposite(game: Game):
     opponent = game.attack_add[:7]
     player = game.attack_add[7:]
@@ -45,10 +78,13 @@ def find_opposite(game: Game):
             return f"{15 - i} -> {i}"
     return ""
 
+def print_paint(game: Game, config: LSTConfig):
+    if config.paint_attack_sum_15:
+        opposite = find_opposite(game)
+        print(opposite)
+
 def print_game(header: str, game: Game, config: LSTConfig):
-    opponent_string = get_minions_string(game.opponents_board, config)
-    player_string = get_minions_string(game.players_board, config)
-    opposite = find_opposite(game)
+    opponent_string, player_string = get_minions_strings(game, config)
     print(header)
     print(
         tabulate(
@@ -60,7 +96,7 @@ def print_game(header: str, game: Game, config: LSTConfig):
             ], headers=[f"Pos. {i}" for i in range(1, 8)]
         )
     )
-    print(opposite)
+    print_paint(game, config)
 
 
 def get_minions_log(minions, config: LSTConfig):

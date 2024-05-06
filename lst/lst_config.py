@@ -26,6 +26,9 @@ class LSTConfig:
         self.show_minion_name = int(self.config['display']['minion_name']) == 1
         self.show_set = int(self.config['display']['set']) == 1
 
+        self.paint_attack_sum_15 = int(self.config['paint']['attack_sum_15']) == 1
+        self.paint_color_cycles = int(self.config['paint']['color_cycles']) == 1
+
         self.log_array_separator = parse_separator(self.config['logging']['array_separator'])
         self.log_type_seperator = parse_separator(self.config['logging']['type_separator'])
         self.log_attack_add = int(self.config['logging']['attack_add']) == 1
@@ -56,6 +59,11 @@ def generate_default_config():
         'mana': '0',
         'minion_name': '0',
         'set': '0',
+    }
+
+    config['paint'] = {
+        'attack_sum_15': '0',
+        'color_cycles': '0',
     }
 
     config['logging'] = {

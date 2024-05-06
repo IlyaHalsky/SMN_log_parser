@@ -133,6 +133,34 @@ def lehmer_code_calc(boards):
                 seen_codes.add(l)
             w.write(f"{l};{a};{m}\n")
 
+def generate_boards(board):
+    result = [board]
+    for i in range(7):
+        for j in range(7):
+            new_board = board.copy()
+            new_board[i], new_board[j + 7] = new_board[j + 7], new_board[i]
+            result.append(new_board)
+    return result
+
+def lehmer_code_calc_one_move(boards):
+    final = []
+    games = set()
+    for board in boards:
+        if board.game_key not in games:
+            games.add(board.game_key)
+            continue
+        for r in generate_boards(board.attack_add):
+            final.append((lehmer_code(r), r, board.minion_names))
+    final.sort(key=lambda item: item[0])
+    seen_codes = set()
+    with open(f'csv_dump/lehmer_one_move.txt', 'w') as w:
+        for l, a, m in final:
+            if l in seen_codes:
+                print("pooooog", l, a, m)
+            else:
+                seen_codes.add(l)
+            w.write(f"{l};{a};{m}\n")
+
 
 def combinations(boards):
     counts = defaultdict(int)
@@ -360,6 +388,7 @@ if __name__ == '__main__':
     pairs_of_total_attack(boards)
     sticky_by_run(one_to_one)
     sticky_by_run(reset)
+    lehmer_code_calc_one_move(one_to_one)
 
     # attack repeats with made attack
     seen_attack = defaultdict(list)
