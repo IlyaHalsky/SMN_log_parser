@@ -6,7 +6,7 @@ from tqdm import tqdm
 from lehmer_code import lehmer_code
 from lehmer_db import lehmer_db_csv, lehmer_db_smn
 from minions_utils import minions_by_id
-from parse_lst import read_all_games, Runs
+from parse_lst import read_all_games, Runs, Run
 
 
 def sort_key(input):
@@ -366,6 +366,49 @@ def findLength(nums1: List[int], nums2: List[int]) -> int:
     return l
 
 
+def longestRepeatedSubstring(str):
+
+    n = len(str)
+    LCSRe = [[0 for x in range(n + 1)]
+        for y in range(n + 1)]
+
+    res = []  # To store result
+    res_length = 0  # To store length of result
+
+    # building table in bottom-up manner
+    index = 0
+    for i in range(1, n + 1):
+        for j in range(i + 1, n + 1):
+
+            # (j-i) > LCSRe[i-1][j-1] to remove
+            # overlapping
+            if (str[i - 1] == str[j - 1] and
+                LCSRe[i - 1][j - 1] < (j - i)):
+                LCSRe[i][j] = LCSRe[i - 1][j - 1] + 1
+
+                # updating maximum length of the
+                # substring and updating the finishing
+                # index of the suffix
+                if (LCSRe[i][j] > res_length):
+                    res_length = LCSRe[i][j]
+                    index = max(i, index)
+
+            else:
+                LCSRe[i][j] = 0
+
+    # If we have non-empty result, then insert
+    # all characters from first character to
+    # last character of string
+    if (res_length > 0):
+        for i in range(
+            index - res_length + 1,
+            index + 1
+        ):
+            res.append(str[i - 1])
+
+    return res
+
+
 def prepare_game(game):
     result = game.attack_add
     result[0], result[7] = result[7], result[0]
@@ -445,12 +488,13 @@ def lehmer_code_calc_one_move(games):
             if l in seen_codes:
                 print("pooooog1", l, a, m, o, seen_codes[l])
             else:
-                seen_codes[l] = (a,m,o)
+                seen_codes[l] = (a, m, o)
             # if lehmer_db_csv.seen(l) is not None:
             #    print("pooooog2", l, a, m)
             # if lehmer_db_smn.seen(l) is not None:
             #    print("pooooog3", l, a, m)
             w.write(f"{l};{a};{m};{o}\n")
+
 
 def find_loops(attack_add):
     used = set()
@@ -468,6 +512,7 @@ def find_loops(attack_add):
             loops.append(loop)
     return len(loops)
 
+
 def loops_distribution(runs):
     loops = defaultdict(int)
     for game in runs.all_games:
@@ -475,6 +520,163 @@ def loops_distribution(runs):
     loops = sort_key(loops)
     for k, v in loops.items():
         print(k, v / len(runs.all_games))
+
+
+class Trip:
+    def __init__(self):
+        self.trip = []
+        self.cards = []
+
+    def init(self, minion, board):
+        self.trip.append(minion.attack_change)
+        self.cards.append(minion)
+        self.last_board = board.attack_add
+
+    def add_next(self, board):
+        last = self.trip[-1]
+        last_index = self.last_board.index(last)
+        attack_add = board.attack_add
+        minions = board.minions
+        ## simple variant
+        # self.trip.append(attack_add[last - 1])
+        # self.minions.append(minions[last - 1].card_id)
+        ## accounting for 1-1
+        if last_index == 0:
+            self.trip.append(attack_add[self.last_board[7] - 1])
+            self.cards.append(minions[self.last_board[7] - 1])
+        elif last_index == 7:
+            self.trip.append(attack_add[self.last_board[0] - 1])
+            self.cards.append(minions[self.last_board[0] - 1])
+        else:
+            self.trip.append(attack_add[last - 1])
+            self.cards.append(minions[last - 1])
+        self.last_board = attack_add
+
+    @property
+    def minions(self):
+        return [m.card_id for m in self.cards]
+
+    @property
+    def rarity(self):
+        return [m.rarity for m in self.cards]
+
+    @property
+    def expansion(self):
+        return [m.expansion for m in self.cards]
+
+    @staticmethod
+    def init_trips(board):
+        trips = []
+        for minion in board.minions:
+            trip = Trip()
+            trip.init(minion, board)
+            trips.append(trip)
+        return trips
+
+
+def build_trips(session: Run):
+    trips = []
+    first = True
+    for game in session.games:
+        if first:
+            trips = Trip.init_trips(game)
+            first = False
+        else:
+            for trip in trips:
+                trip.add_next(game)
+    return trips
+
+
+def common_trips(runs: Runs):
+    all_trips = []
+    for session in runs.all_sessions:
+        all_trips.extend(build_trips(session))
+    size = defaultdict(int)
+    for i, trip1 in enumerate(tqdm(all_trips)):
+        for j, trip2 in enumerate(all_trips):
+            if j > i:
+                length = findLength(trip1.trip, trip2.trip)
+                # if length >= 8:
+                #    print(length)
+                #    print(trip1)
+                #    print(trip2)
+                size[length] += 1
+    size = sort_key(size)
+    print(size)
+
+def common_trips_minions(runs: Runs):
+    all_trips = []
+    for session in runs.all_sessions:
+        all_trips.extend(build_trips(session))
+    size = defaultdict(int)
+    for i, trip1 in enumerate(tqdm(all_trips)):
+        for j, trip2 in enumerate(all_trips):
+            if j > i:
+                length = findLength(trip1.expansion, trip2.expansion)
+                # if length >= 8:
+                #    print(length)
+                #    print(trip1)
+                #    print(trip2)
+                size[length] += 1
+    size = sort_key(size)
+    print(size)
+
+
+def repeating_sub_trips(runs: Runs):
+    all_trips = []
+    for session in runs.all_sessions:
+        all_trips.extend(build_trips(session))
+    for trip in tqdm(all_trips):
+        repeat = longestRepeatedSubstring(trip.trip)
+        if len(repeat) > 5:
+            print(repeat, len(trip.trip))
+
+
+def paired_occurrence(runs: Runs):
+    minion_pairs = defaultdict(lambda: defaultdict(int))
+    for session in runs.all_sessions:
+        last = None
+        for game in session.games:
+            if last is None:
+                last = game
+            else:
+                for i, minion in enumerate(last.minions):
+                    for j, minion2 in enumerate(game.minions):
+                        if True:
+                            id1 = minion.card_id
+                            id2 = minion2.card_id
+                            f = min(id1, id2)
+                            s = max(id1, id2)
+                            minion_pairs[f][s] += 1
+                last = game
+    result = defaultdict(int)
+    counts = defaultdict(int)
+    for k, v in minion_pairs.items():
+        k_name = minions_by_id[k]['name']
+        v = sort_value(v)
+        for k2, v2 in v.items():
+            k2_name = minions_by_id[k2]['name']
+            result[f"{k};{k2};{k_name};{k2_name};{v2}\n"] = v2
+            counts[v2] += 1
+    with open(f'analysis/minions_on_same_board.txt', 'w') as w:
+        result = sort_value(result, reversed=True)
+        for k, v in result.items():
+            w.write(f"{k}")
+    counts = sort_key(counts)
+    print(counts)
+
+def set_distribution(runs):
+    set_count = defaultdict(int)
+    set_size = defaultdict(lambda: set())
+    for game in runs.all_games:
+        for m in game.minions:
+            exp = m.card_id.split("_")[0]
+            set_count[exp] += 1
+            set_size[exp].add(m.card_id)
+    set_size = sort_key(set_size)
+    set_count = sort_key(set_count)
+    for k, v in set_size.items():
+        print(k, len(v), set_count[k])
 
 if __name__ == '__main__':
     runs = read_all_games(
@@ -489,10 +691,22 @@ if __name__ == '__main__':
     # first_board_counts(runs)
     # first_board_yours(runs)
     # minions(runs)
-    #lehmer_code_calc_with_swap(runs.all_games)
-    #lehmer_code_calc_decoded(runs)
+    # lehmer_code_calc_with_swap(runs.all_games)
+    # lehmer_code_calc_decoded(runs)
     # longest_common_chain(runs)
     # longest_common_chain_opponent(runs)
     # longest_common_chain_player(runs)
-    #lehmer_code_calc_one_move(runs.all_games)
-    #loops_distribution(runs)
+    # lehmer_code_calc_one_move(runs.all_games)
+    # loops_distribution(runs)
+    # common_trips(runs)
+    #repeating_sub_trips(runs)
+    #common_trips_minions(runs)
+    # for session in runs.all_sessions:
+    #    trips = build_trips(session)
+    #    for trip in trips:
+    #        print(trip.trip)
+    #    for board in session.games:
+    #        print(board.attack_add)
+    #    break
+    #paired_occurrence(runs)
+    set_distribution(runs)
