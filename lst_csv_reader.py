@@ -6,8 +6,8 @@ from itertools import groupby
 import numpy as np
 from tqdm import tqdm
 
-from minions_utils import minions_by_id
 from lehmer_code import lehmer_code
+from minions_utils import minions_by_id
 
 
 # download from https://athena.hearthmod.com/apollo/mysterious
@@ -56,6 +56,7 @@ def sort_key(input):
 
 def sort_value(input):
     return dict(sorted(input.items(), key=lambda item: item[1]))
+
 
 def clean_data(boards):
     seen = set()
@@ -133,6 +134,7 @@ def lehmer_code_calc(boards):
                 seen_codes.add(l)
             w.write(f"{l};{a};{m}\n")
 
+
 def generate_boards(board):
     result = [board]
     for i in range(7):
@@ -141,6 +143,7 @@ def generate_boards(board):
             new_board[i], new_board[j + 7] = new_board[j + 7], new_board[i]
             result.append(new_board)
     return result
+
 
 def lehmer_code_calc_one_move(boards):
     final = []
@@ -321,12 +324,14 @@ def distributions_by_run(boards):
                 w.write(f"class {class_counts} \n")
                 w.write(f'{len(list(abb))}\n')
 
+
 def compare_same(b1, b2):
     count = 0
     for i in range(14):
         if b1[i] == b2[i]:
             count += 1
     return count
+
 
 def sticky_by_run(boards):
     tpe = boards[0].game_type
@@ -359,6 +364,116 @@ def pairs_of_total_attack(boards):
     print(total_count, len(boards))
 
 
+def extract_resets(boards):
+    with open('csv_dump/resets_parsed.txt', 'w', encoding='utf-8') as w:
+        for board in boards:
+            w.write(f"{','.join(map(str, board.attack_add))};{','.join(map(str, board.minion_names))}\n")
+
+
+def extract_one_to_one(boards):
+    with open(f'csv_dump/one_to_one_parsed.txt', 'w', encoding='utf-8') as w:
+        boards.sort(key=lambda board: board.game_key)
+        for key, games_iter in groupby(boards, lambda board: board.game_key):
+            games = list(games_iter)
+            games.sort(key=lambda b: b.start_id)
+            print(key)
+            print([k.game_key for k in games])
+            for board in games:
+                w.write(
+                    f"{board.game_key};{','.join(map(str, board.attack_add))};{','.join(map(str, board.minion_names))}\n"
+                )
+
+
+def get_set(card_id):
+    expansion = minions_by_id[card_id.replace('SCH_199t', 'SCH_199')]['set']
+    return expansion
+
+
+all_sets = {
+    'BOOMSDAY', 'YEAR_OF_THE_DRAGON',
+    'WHIZBANGS_WORKSHOP', 'GILNEAS',
+    'DARKMOON_FAIRE', 'THE_BARRENS',
+    'STORMWIND', 'ICECROWN',
+    'GVG', 'OG', 'DEMON_HUNTER_INITIATE',
+    'WONDERS', 'LOE', 'BLACK_TEMPLE',
+    'UNGORO', 'DRAGONS', 'LOOTAPALOOZA',
+    'TITANS', 'RETURN_OF_THE_LICH_KING',
+    'TGT', 'EXPERT1', 'GANGS', 'KARA',
+    'PLACEHOLDER_202204', 'BRM', 'ULDUM',
+    'DALARAN', 'LEGACY', 'SCHOLOMANCE',
+    'NAXX', 'THE_SUNKEN_CITY', 'REVENDRETH',
+    'ALTERAC_VALLEY', 'BATTLE_OF_THE_BANDS',
+    'EVENT', 'CORE', 'PATH_OF_ARTHAS',
+    'WILD_WEST', 'TROLL'
+}
+
+set_year = {
+    'PLACEHOLDER_202204': 0,
+
+    'LEGACY': 2014,
+    'NAXX': 2014,
+    'GVG': 2014,
+    'EXPERT1': 2014,
+
+    'BRM': 2015,
+    'TGT': 2015,
+    'LOE': 2015,
+
+    'OG': 2016,
+    'KARA': 2016,
+    'GANGS': 2016,
+
+    'UNGORO': 2017,
+    'ICECROWN': 2017,
+    'LOOTAPALOOZA': 2017,
+
+    'GILNEAS': 2018,
+    'BOOMSDAY': 2018,
+    'TROLL': 2018,
+
+    'YEAR_OF_THE_DRAGON': 2019,
+    'DALARAN': 2019,
+    'ULDUM': 2019,
+    'DRAGONS': 2019,
+
+
+    'DEMON_HUNTER_INITIATE': 2020,
+    'BLACK_TEMPLE': 2020,
+    'SCHOLOMANCE': 2020,
+    'DARKMOON_FAIRE': 2020,
+
+    'THE_BARRENS': 2021,
+    'STORMWIND': 2021,
+    'ALTERAC_VALLEY': 2021,
+
+    'THE_SUNKEN_CITY': 2022,
+    'REVENDRETH': 2022,
+    'PATH_OF_ARTHAS': 2022,
+    'RETURN_OF_THE_LICH_KING': 2022,
+
+    'BATTLE_OF_THE_BANDS': 2023,
+    'TITANS': 2023,
+    'WONDERS': 2023,
+    'WILD_WEST': 2023,
+
+    'EVENT': 2024,
+    'CORE': 2024,
+    'WHIZBANGS_WORKSHOP': 2024,
+}
+
+
+def reset_sets(boards):
+    for board in boards:
+        opponent = board.minion_names[:7]
+        opponent_exp = [get_set(c_id) for c_id in opponent]
+        opponent_years = set([set_year[exp] for exp in opponent_exp])
+        player = board.minion_names[7:]
+        player_exp = [get_set(c_id) for c_id in player]
+        player_years = set([set_year[exp] for exp in player_exp])
+        if opponent_years.isdisjoint(player_years):
+            print(board.attack_add, board.minion_names)
+
+
 if __name__ == '__main__':
     boards = []
     with open('mysterious.csv', encoding="utf8") as csvfile:
@@ -388,33 +503,36 @@ if __name__ == '__main__':
     pairs_of_total_attack(boards)
     sticky_by_run(one_to_one)
     sticky_by_run(reset)
-    lehmer_code_calc_one_move(one_to_one)
+    # lehmer_code_calc_one_move(one_to_one)
+    extract_resets(reset)
+    extract_one_to_one(one_to_one)
+    reset_sets(reset)
 
-    # attack repeats with made attack
-    seen_attack = defaultdict(list)
-    for board in one_to_one:
-        attack_copy = board.attack_add.copy()
-        # attack_copy[0], attack_copy[7] = attack_copy[7], attack_copy[0]
-        attack_copy = [*attack_copy[:7], *list(reversed(attack_copy[7:]))]
-        for i in range(14):
-            attack_add = rotate(attack_copy, i)
-            attack = ','.join(map(str, attack_add))
-            seen_attack[attack].append(board)
-        for i in range(14):
-            attack_add = rotate(board.attack_add, i)
-            attack = ','.join(map(str, attack_add))
-            seen_attack[attack].append(board)
-    printed = set()
-    for key, value in seen_attack.items():
-        if len(value) > 1:
-            if ';'.join(map(str, map(lambda board: board.for_hashing, value))) in printed:
-                continue
-            else:
-                printed.add(';'.join(map(str, map(lambda board: board.for_hashing, value))))
-            print(key)
-            for board in value:
-                print(board)
-                print(board.attack_add)
+    ## attack repeats with made attack
+    # seen_attack = defaultdict(list)
+    # for board in one_to_one:
+    #    attack_copy = board.attack_add.copy()
+    #    # attack_copy[0], attack_copy[7] = attack_copy[7], attack_copy[0]
+    #    attack_copy = [*attack_copy[:7], *list(reversed(attack_copy[7:]))]
+    #    for i in range(14):
+    #        attack_add = rotate(attack_copy, i)
+    #        attack = ','.join(map(str, attack_add))
+    #        seen_attack[attack].append(board)
+    #    for i in range(14):
+    #        attack_add = rotate(board.attack_add, i)
+    #        attack = ','.join(map(str, attack_add))
+    #        seen_attack[attack].append(board)
+    # printed = set()
+    # for key, value in seen_attack.items():
+    #    if len(value) > 1:
+    #        if ';'.join(map(str, map(lambda board: board.for_hashing, value))) in printed:
+    #            continue
+    #        else:
+    #            printed.add(';'.join(map(str, map(lambda board: board.for_hashing, value))))
+    #        print(key)
+    #        for board in value:
+    #            print(board)
+    #            print(board.attack_add)
     ## attack repeats
     # seen_attack = defaultdict(list)
     # for board in boards:

@@ -35,6 +35,10 @@ def get_minions_string(attack_add_colors, minions: [Minion], config: LSTConfig):
             minion_strings.append(minion.name)
         if config.show_set:
             minion_strings.append(minion.expansion)
+        if config.show_sub_set:
+            minion_strings.append(get_miniset(minion))
+        if config.show_minion_id:
+            minion_strings.append(minion.card_id)
         result.append(' '.join(map(str, minion_strings)))
     return result
 
@@ -59,9 +63,27 @@ def find_loops(game: Game):
             highlight[attack] = i
     return highlight
 
+def get_miniset(minion):
+    if minion.expansion_raw == 'LEGACY' or minion.expansion_raw == 'EXPERT1':
+        return 'LEGACY'
+    else:
+        return minion.card_id.split('_')[0]
+
+def find_matching_sub_sets(game: Game):
+    opponent_sets = set([get_miniset(m) for m in game.opponents_board])
+    player_sets = set([get_miniset(m) for m in game.players_board])
+    overlap = list(opponent_sets & player_sets)
+    highlight = {}
+    for m in game.minions:
+        if get_miniset(m) in overlap:
+            highlight[m.attack_change] = overlap.index(get_miniset(m)) + 1
+    return highlight
+
 def get_minions_strings(game: Game, config: LSTConfig):
     if config.paint_color_cycles:
         attack_add_colors = find_loops(game)
+    elif config.paint_matching_sub_sets:
+        attack_add_colors = find_matching_sub_sets(game)
     else:
         attack_add_colors = {}
     opponent_string = get_minions_string(attack_add_colors, game.opponents_board, config)
