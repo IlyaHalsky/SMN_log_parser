@@ -45,8 +45,10 @@ def follow(file, sleep_sec=0.1) -> Iterator[str]:
             break
     yield ''
 
+
 def color_spells(correct, spells):
     return list(map(lambda spell: red(spell.name) if spell.card_id not in correct else green(spell.name), spells))
+
 
 def print_game(game: Game):
     opponent_string = list(map(lambda m: m.name, game.opponents_board))
@@ -66,7 +68,9 @@ def log_game(header: str, game: Game):
     logger.info(header)
     correct_answers = [s.card_id for s in game.correct_smn_answers]
     for i, minion in enumerate(game.opponents_board):
-        logger.info(f"{minion.card_id}    ;O{i + 1};B{i + 1};H{correct_answers.index(minion.card_id) + 1};{minion.name}")
+        logger.info(
+            f"{minion.card_id}    ;O{i + 1};B{i + 1};H{correct_answers.index(minion.card_id) + 1};{minion.name}"
+        )
     for i, minion in enumerate(game.players_board):
         logger.info(
             f"{minion.card_id}    ;P{i + 1};B{i + 1 + 7};H{correct_answers.index(minion.card_id) + 1};{minion.name}"
@@ -140,9 +144,9 @@ def read_log_file(filename: str):
             print_last = print_game(last_game)
             print(f"Game: {list_offset // RESTART_OFFSET + 1} Turn: {list_num - 2}")
             print(print_last)
-            #log_game(f"Game: {list_offset // RESTART_OFFSET + 1} Turn: {list_num - 2}", last_game)
-            # image = create_board_image(last_game, 255 if has_dups else 0)
-            # image = cv2.resize(image, (0, 0), fx=0.7, fy=0.7)
+            # log_game(f"Game: {list_offset // RESTART_OFFSET + 1} Turn: {list_num - 2}", last_game)
+            # image = create_board_image(last_game, 0)
+            # cv2.imwrite("last_game/smn.jpg", image)
             # cv2.imshow('board', image)
             # cv2.waitKey(1)
         minions = dict(filter(my_filtering_function, minions.items()))
@@ -187,4 +191,4 @@ if __name__ == '__main__':
         print(f"Zone.log exists, starting reading")
         read_log_file(log_path)
     else:
-        read_log_file('logs/Zone.log')
+        read_log_file('last_game/SMN.log')

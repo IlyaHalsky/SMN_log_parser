@@ -7,7 +7,7 @@ from typing import Optional
 from hearthstone.enums import CardSet
 
 from card_sets import set_names
-from minions_utils import minions_by_id, minions_by_name, minions_by_dbfId
+from minions_utils import minions_by_name, cards_by_dbfId, cards_by_id
 
 TIMESTAMP_RE = re.compile(r"^([DWE]) ([\d:.]+) (.+)$")
 MESSAGE_RE = re.compile(r"^(.*) - (.*)$")
@@ -57,7 +57,7 @@ def parse_minion(date, filename, log, minions, list_offset):
                 tags=[],
                 lists=[list_id],
             )
-            minions[minion_id].json = minions_by_id.get(card_id, {})
+            minions[minion_id].json = cards_by_id.get(card_id, {})
         elif minions[minion_id].name == '???':
             minions[minion_id].name = name
             minions[minion_id].json = minions_by_name.get(name, {})
@@ -67,8 +67,8 @@ def parse_minion(date, filename, log, minions, list_offset):
             minions[minion_id].lists.append(list_id)
             if tags.group(1) == 'OVERRIDECARDNAME':
                 value = tags.group(2)[:-1]
-                if value in minions_by_dbfId:
-                    json = minions_by_dbfId[value]
+                if value in cards_by_dbfId:
+                    json = cards_by_dbfId[value]
                     minions[minion_id].card_id = json['id']
                     minions[minion_id].name = json['name']
                     minions[minion_id].json = json
@@ -129,12 +129,45 @@ class Minion:
             return None
 
     @property
+    def current_health(self) -> Optional[int]:
+        health_tags = [int(tag[1][:-1]) for tag in self.tags if tag[0] == 'HEALTH' if tag[1][:-1].isdigit()]
+        if len(health_tags) > 0:
+            return health_tags[0]
+        else:
+            return None
+
+    @property
+    def current_cost(self) -> Optional[int]:
+        cost_tags = [int(tag[1][:-1]) for tag in self.tags if tag[0] == 'COST' if tag[1][:-1].isdigit()]
+        if len(cost_tags) > 0:
+            return cost_tags[0]
+        else:
+            return None
+
+    @property
     def attack_change(self):
         current = self.current_attack
         if current is None:
             return 0
         else:
             return current - self.attack
+
+    @property
+    def health_change(self):
+        current = self.current_health
+        if current is None:
+            return 0
+        else:
+            return current - self.health
+
+    @property
+    def cost_change(self):
+        current = self.current_cost
+        if current is None:
+            return 0
+        else:
+            return current - self.mana
+
 
     @property
     def position(self):

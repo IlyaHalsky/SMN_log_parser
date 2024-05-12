@@ -5,6 +5,7 @@ dist
 build
 *.spec
 .idea
+last_game
 
 image_cache
 .idea/**/workspace.xml

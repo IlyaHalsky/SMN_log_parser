@@ -1,5 +1,9 @@
+import os
+import shutil
+
 import cv2
 import numpy as np
+import requests
 
 from smn_game import Game
 
@@ -31,11 +35,22 @@ def combine(image, card, base, offset_h, offset_w):
     combined = np.where(alpha != 255, combined, image)
     base[offset_h: offset_h + h, offset_w:offset_w + w] = combined
 
+def en_image(minion):
+   url = f"https://art.hearthstonejson.com/v1/render/latest/enUS/256x/{minion.card_id}.png"
+   if not os.path.exists("./image_cache"):
+       os.makedirs(f"./image_cache")
+   if not os.path.exists(f"./image_cache/{minion.card_id}.png"):
+       response = requests.get(url, stream=True)
+       with open(f"./image_cache/{minion.card_id}.png", 'wb') as out_file:
+           shutil.copyfileobj(response.raw, out_file)
+       del response
+   image = cv2.imread(f"./image_cache/{minion.card_id}.png", cv2.IMREAD_UNCHANGED)
+   return image
 
 def create_board_image(game: Game, bg=0):
-    opponent_images = [minion.en_image for minion in game.opponents_board]
-    player_images = [minion.en_image for minion in game.players_board]
-    spells = [minion.en_image for minion in game.spells]
+    opponent_images = [en_image(minion) for minion in game.opponents_board]
+    player_images = [en_image(minion) for minion in game.players_board]
+    spells = [en_image(minion) for minion in game.spells]
     max_width = 0
     total_height = 0
     w_o, h_o = count_size(opponent_images)
